@@ -1,0 +1,234 @@
+package br.com.viavalesistemas.manutencaobike.ui.bikedetalhe
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.viavalesistemas.manutencaobike.model.Bike
+import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
+import br.com.viavalesistemas.manutencaobike.ui.componentes.Confirmacao
+import br.com.viavalesistemas.manutencaobike.ui.componentes.DialogoConfirmacao
+import br.com.viavalesistemas.manutencaobike.ui.componentes.LocalSnackbarHostState
+import br.com.viavalesistemas.manutencaobike.ui.componentes.TopoComVoltar
+import br.com.viavalesistemas.manutencaobike.ui.formatarKm
+import br.com.viavalesistemas.manutencaobike.ui.formatarMoeda
+import br.com.viavalesistemas.manutencaobike.ui.lerInteiro
+import kotlin.math.roundToLong
+
+private enum class Aba(val titulo: String) { PECAS("Peças"), SERVICOS("Serviços"), HISTORICO("Histórico") }
+
+@Composable
+fun BikeDetalheScreen(
+    onVoltar: () -> Unit,
+    onEditarBike: (Long) -> Unit,
+    onInstalarPeca: (bikeId: Long, tipoPecaId: Long) -> Unit,
+    onRegistrarServico: (Long) -> Unit,
+    viewModel: BikeDetalheViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbar = LocalSnackbarHostState.current
+    ColetarEfeitos(viewModel.efeitos) { efeito ->
+        when (efeito) {
+            BikeDetalheEfeito.Voltar -> onVoltar()
+            is BikeDetalheEfeito.InstalarPeca -> onInstalarPeca(efeito.bikeId, efeito.tipoPecaId)
+            is BikeDetalheEfeito.Mensagem -> snackbar.showSnackbar(efeito.texto)
+        }
+    }
+
+    BikeDetalheContent(
+        uiState = uiState,
+        actions = viewModel,
+        onVoltar = onVoltar,
+        onEditarBike = { onEditarBike(viewModel.bikeId) },
+        onInstalarPeca = { onInstalarPeca(viewModel.bikeId, 0L) },
+        onRegistrarServico = { onRegistrarServico(viewModel.bikeId) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BikeDetalheContent(
+    uiState: BikeDetalheUiState,
+    actions: BikeDetalheActions,
+    onVoltar: () -> Unit,
+    onEditarBike: () -> Unit,
+    onInstalarPeca: () -> Unit,
+    onRegistrarServico: () -> Unit,
+) {
+    var abaSelecionada by rememberSaveable { mutableIntStateOf(0) }
+    var confirmacao by remember { mutableStateOf<Confirmacao?>(null) }
+    var editandoKm by rememberSaveable { mutableStateOf(false) }
+    val bike = uiState.bike
+    val aba = Aba.entries[abaSelecionada]
+
+    Scaffold(
+        topBar = {
+            TopoComVoltar(titulo = bike?.nome.orEmpty(), onVoltar = onVoltar) {
+                if (bike != null && !bike.doStrava) {
+                    MenuBikeManual(
+                        onEditar = onEditarBike,
+                        onAtualizarKm = { editandoKm = true },
+                        onExcluir = {
+                            confirmacao = Confirmacao(
+                                titulo = "Excluir ${bike.nome}?",
+                                texto = "Todas as peças e serviços desta bike também serão apagados.",
+                                acao = "Excluir",
+                                onConfirmar = actions::onExcluirBike,
+                            )
+                        },
+                    )
+                }
+            }
+        },
+        floatingActionButton = {
+            when (aba) {
+                Aba.PECAS -> ExtendedFloatingActionButton(
+                    onClick = onInstalarPeca,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("Instalar peça") },
+                )
+                Aba.SERVICOS -> ExtendedFloatingActionButton(
+                    onClick = onRegistrarServico,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("Registrar serviço") },
+                )
+                Aba.HISTORICO -> Unit
+            }
+        },
+        snackbarHost = { SnackbarHost(LocalSnackbarHostState.current) },
+    ) { padding ->
+        if (uiState.carregando || bike == null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                if (uiState.carregando) CircularProgressIndicator() else Text("Bike não encontrada")
+            }
+            return@Scaffold
+        }
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            CabecalhoBike(bike, uiState.custoTotal)
+            PrimaryTabRow(selectedTabIndex = abaSelecionada) {
+                Aba.entries.forEachIndexed { indice, item ->
+                    Tab(selected = abaSelecionada == indice, onClick = { abaSelecionada = indice }, text = { Text(item.titulo) })
+                }
+            }
+            when (aba) {
+                Aba.PECAS -> AbaPecas(uiState.pecasInstaladas, actions, onPedirConfirmacao = { confirmacao = it })
+                Aba.SERVICOS -> AbaServicos(uiState, actions, bike.kmAtual, onPedirConfirmacao = { confirmacao = it })
+                Aba.HISTORICO -> AbaHistorico(uiState)
+            }
+        }
+    }
+
+    confirmacao?.let { DialogoConfirmacao(it, onFechar = { confirmacao = null }) }
+    if (editandoKm && bike != null) {
+        DialogoAtualizarKm(
+            kmAtual = bike.kmAtual,
+            onConfirmar = {
+                actions.onAtualizarKm(it)
+                editandoKm = false
+            },
+            onFechar = { editandoKm = false },
+        )
+    }
+}
+
+@Composable
+private fun CabecalhoBike(bike: Bike, custoTotal: Long) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(formatarKm(bike.kmAtual), style = MaterialTheme.typography.headlineMedium)
+            Text(
+                bike.descricao ?: if (bike.doStrava) "Sincronizada com o Strava" else "Cadastro manual",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text("Gasto total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(formatarMoeda(custoTotal), style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun MenuBikeManual(onEditar: () -> Unit, onAtualizarKm: () -> Unit, onExcluir: () -> Unit) {
+    var aberto by remember { mutableStateOf(false) }
+    IconButton(onClick = { aberto = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mais opções") }
+    DropdownMenu(expanded = aberto, onDismissRequest = { aberto = false }) {
+        DropdownMenuItem(
+            text = { Text("Atualizar km") },
+            onClick = { aberto = false; onAtualizarKm() },
+        )
+        DropdownMenuItem(
+            text = { Text("Editar") },
+            leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+            onClick = { aberto = false; onEditar() },
+        )
+        DropdownMenuItem(
+            text = { Text("Excluir bike") },
+            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+            onClick = { aberto = false; onExcluir() },
+        )
+    }
+}
+
+@Composable
+private fun DialogoAtualizarKm(kmAtual: Double, onConfirmar: (Int) -> Unit, onFechar: () -> Unit) {
+    var texto by rememberSaveable { mutableStateOf(kmAtual.roundToLong().toString()) }
+    val km = lerInteiro(texto)
+    AlertDialog(
+        onDismissRequest = onFechar,
+        title = { Text("Quilometragem atual") },
+        text = {
+            OutlinedTextField(
+                value = texto,
+                onValueChange = { texto = it.filter(Char::isDigit) },
+                label = { Text("km no odômetro") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+        },
+        confirmButton = { TextButton(onClick = { km?.let(onConfirmar) }, enabled = km != null) { Text("Salvar") } },
+        dismissButton = { TextButton(onClick = onFechar) { Text("Cancelar") } },
+    )
+}
