@@ -32,6 +32,7 @@ data class BikeResumo(
     val itensAtencao: Int,
     /** Desgaste do item mais gasto (peça ou serviço); 0 quando não há nada cadastrado. */
     val maiorDesgaste: Double = 0.0,
+    val temItensAcompanhados: Boolean = true,
 ) {
     val status: StatusDesgaste get() = statusPorFracao(maiorDesgaste)
 }
@@ -81,6 +82,7 @@ class BikesViewModel @Inject constructor(
                 itensTrocar = alertas.count { it.status == StatusDesgaste.TROCAR },
                 itensAtencao = alertas.count { it.status == StatusDesgaste.ATENCAO },
                 maiorDesgaste = desgastes.maxOrNull() ?: 0.0,
+                temItensAcompanhados = desgastes.isNotEmpty(),
             )
         }
     }

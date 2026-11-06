@@ -10,5 +10,10 @@ data class Bike(
     val arquivada: Boolean = false,
 ) {
     val doStrava: Boolean get() = stravaGearId != null
-    val descricao: String? get() = listOfNotNull(marca, modelo).joinToString(" ").ifBlank { null }
+
+    private fun String.normalizado() = trim().replace(Regex("\\s+"), " ")
+    /** Marca e modelo, omitido quando só repete o nome (comum em bikes do Strava). */
+    val descricao: String?
+        get() = listOfNotNull(marca, modelo).joinToString(" ").normalizado().ifBlank { null }
+            ?.takeUnless { it.equals(nome.normalizado(), ignoreCase = true) }
 }

@@ -335,13 +335,22 @@ private fun CartaoBike(resumo: BikeResumo, onClick: () -> Unit, modifier: Modifi
                 }
             }
             Spacer(Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AnelDesgaste(resumo.maiorDesgaste, resumo.status)
-                Spacer(Modifier.height(4.dp))
+            if (resumo.temItensAcompanhados) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    AnelDesgaste(resumo.maiorDesgaste, resumo.status)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        textoSituacao(resumo),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = corDoStatus(resumo.status),
+                    )
+                }
+            } else {
                 Text(
-                    textoSituacao(resumo),
+                    "Sem peças\ncadastradas",
                     style = MaterialTheme.typography.labelSmall,
-                    color = corDoStatus(resumo.status),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
