@@ -65,17 +65,17 @@ class StravaRepository @Inject constructor(
                         modelo = detalhe.modelName,
                         kmAtual = km,
                         stravaGearId = resumo.id,
-                        arquivada = aposentada,
+                        inativa = aposentada,
                     ),
                 )
             } else {
+                // Ativa/inativa e foto são escolhas do usuário no app; a sincronização não mexe nelas.
                 bikeDao.atualizar(
                     existente.copy(
                         nome = nome,
                         marca = detalhe.brandName ?: existente.marca,
                         modelo = detalhe.modelName ?: existente.modelo,
                         kmAtual = km,
-                        arquivada = aposentada,
                     ),
                 )
             }

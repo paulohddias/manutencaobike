@@ -24,6 +24,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.ui.layout.ContentScale
+import br.com.viavalesistemas.manutencaobike.ui.componentes.Pilula
+import coil3.compose.AsyncImage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -113,10 +119,24 @@ private fun BikeDetalheContent(
     Scaffold(
         topBar = {
             TopoComVoltar(titulo = bike?.nome.orEmpty(), onVoltar = onVoltar) {
-                if (bike != null && !bike.doStrava) {
-                    MenuBikeManual(
+                if (bike != null) {
+                    MenuBike(
+                        bike = bike,
                         onEditar = onEditarBike,
                         onAtualizarKm = { editandoKm = true },
+                        onAlternarAtiva = {
+                            if (bike.ativa) {
+                                confirmacao = Confirmacao(
+                                    titulo = "Inativar ${bike.nome}?",
+                                    texto = "Ela vai para a seção de inativas e para de gerar alertas. " +
+                                        "Peças e serviços continuam salvos e você pode reativar quando quiser.",
+                                    acao = "Inativar",
+                                    onConfirmar = actions::onAlternarAtiva,
+                                )
+                            } else {
+                                actions.onAlternarAtiva()
+                            }
+                        },
                         onExcluir = {
                             confirmacao = Confirmacao(
                                 titulo = "Excluir ${bike.nome}?",
@@ -176,17 +196,49 @@ private fun BikeDetalheContent(
     }
 }
 
-/** Continua a barra superior escura, com os números principais da bike. */
+/** Continua a barra superior escura, com os números principais da bike (e a foto ao fundo, se houver). */
 @Composable
 private fun CabecalhoBike(bike: Bike, uiState: BikeDetalheUiState) {
     val marca = MaterialTheme.marca
-    Column(
+    Box(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-            .background(Brush.verticalGradient(listOf(marca.cabecalho, marca.cabecalhoFim)))
-            .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
+            .background(Brush.verticalGradient(listOf(marca.cabecalho, marca.cabecalhoFim))),
     ) {
+        if (uiState.foto != null) {
+            AsyncImage(
+                model = uiState.foto,
+                contentDescription = "Foto da ${bike.nome}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize(),
+            )
+            // Escurece a foto de cima para baixo para os números continuarem legíveis.
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to marca.cabecalho.copy(alpha = 0.55f),
+                            0.45f to marca.cabecalhoFim.copy(alpha = 0.35f),
+                            1f to marca.cabecalhoFim.copy(alpha = 0.95f),
+                        ),
+                    ),
+            )
+        }
+        ConteudoCabecalho(bike, uiState, comFoto = uiState.foto != null)
+    }
+}
+
+@Composable
+private fun ConteudoCabecalho(bike: Bike, uiState: BikeDetalheUiState, comFoto: Boolean) {
+    val marca = MaterialTheme.marca
+    Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp)) {
+        if (comFoto) Spacer(Modifier.height(120.dp))
+        if (!bike.ativa) {
+            Pilula("Inativa · sem alertas", marca.sobreCabecalhoSuave)
+            Spacer(Modifier.height(8.dp))
+        }
         Text(
             bike.descricao ?: if (bike.doStrava) "Sincronizada com o Strava" else "Cadastro manual",
             style = MaterialTheme.typography.bodyMedium,
@@ -223,24 +275,43 @@ private fun NumeroCabecalho(rotulo: String, valor: String, cor: Color, modifier:
 }
 
 @Composable
-private fun MenuBikeManual(onEditar: () -> Unit, onAtualizarKm: () -> Unit, onExcluir: () -> Unit) {
+private fun MenuBike(
+    bike: Bike,
+    onEditar: () -> Unit,
+    onAtualizarKm: () -> Unit,
+    onAlternarAtiva: () -> Unit,
+    onExcluir: () -> Unit,
+) {
     var aberto by remember { mutableStateOf(false) }
     IconButton(onClick = { aberto = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mais opções") }
     DropdownMenu(expanded = aberto, onDismissRequest = { aberto = false }) {
         DropdownMenuItem(
-            text = { Text("Atualizar km") },
-            onClick = { aberto = false; onAtualizarKm() },
-        )
-        DropdownMenuItem(
-            text = { Text("Editar") },
+            text = { Text("Editar / foto") },
             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
             onClick = { aberto = false; onEditar() },
         )
+        // Bikes do Strava recebem o km na sincronização e são removidas por lá.
+        if (!bike.doStrava) {
+            DropdownMenuItem(
+                text = { Text("Atualizar km") },
+                leadingIcon = { Icon(Icons.Default.Speed, contentDescription = null) },
+                onClick = { aberto = false; onAtualizarKm() },
+            )
+        }
         DropdownMenuItem(
-            text = { Text("Excluir bike") },
-            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            onClick = { aberto = false; onExcluir() },
+            text = { Text(if (bike.ativa) "Inativar bike" else "Reativar bike") },
+            leadingIcon = {
+                Icon(if (bike.ativa) Icons.Default.Archive else Icons.Default.Unarchive, contentDescription = null)
+            },
+            onClick = { aberto = false; onAlternarAtiva() },
         )
+        if (!bike.doStrava) {
+            DropdownMenuItem(
+                text = { Text("Excluir bike") },
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                onClick = { aberto = false; onExcluir() },
+            )
+        }
     }
 }
 

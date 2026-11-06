@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -33,6 +34,7 @@ data class BikeResumo(
     /** Desgaste do item mais gasto (peça ou serviço); 0 quando não há nada cadastrado. */
     val maiorDesgaste: Double = 0.0,
     val temItensAcompanhados: Boolean = true,
+    val foto: File? = null,
 ) {
     val status: StatusDesgaste get() = statusPorFracao(maiorDesgaste)
 }
@@ -40,6 +42,7 @@ data class BikeResumo(
 data class BikesUiState(
     val carregando: Boolean = true,
     val bikes: List<BikeResumo> = emptyList(),
+    val bikesInativas: List<BikeResumo> = emptyList(),
     val stravaConfigurado: Boolean = false,
     val stravaConectado: Boolean = false,
     val nomeAtleta: String? = null,
@@ -53,7 +56,7 @@ sealed interface BikesEfeito {
 
 @HiltViewModel
 class BikesViewModel @Inject constructor(
-    bikeRepository: BikeRepository,
+    private val bikeRepository: BikeRepository,
     pecaRepository: PecaRepository,
     servicoRepository: ServicoRepository,
     catalogoRepository: CatalogoRepository,
@@ -79,6 +82,7 @@ class BikesViewModel @Inject constructor(
                 tiposServico.filter { it.temIntervalo }.mapNotNull { situacaoServico(it, servicosDaBike, bike.kmAtual, hoje).fracao }
             BikeResumo(
                 bike = bike,
+                foto = bikeRepository.arquivoDaFoto(bike),
                 itensTrocar = alertas.count { it.status == StatusDesgaste.TROCAR },
                 itensAtencao = alertas.count { it.status == StatusDesgaste.ATENCAO },
                 maiorDesgaste = desgastes.maxOrNull() ?: 0.0,
@@ -93,9 +97,11 @@ class BikesViewModel @Inject constructor(
         stravaRepository.nomeAtleta,
         sincronizando,
     ) { bikes, conectado, nomeAtleta, sincronizando ->
+        val (ativas, inativas) = bikes.partition { it.bike.ativa }
         BikesUiState(
             carregando = false,
-            bikes = bikes,
+            bikes = ativas,
+            bikesInativas = inativas,
             stravaConfigurado = stravaRepository.configurado,
             stravaConectado = conectado,
             nomeAtleta = nomeAtleta,

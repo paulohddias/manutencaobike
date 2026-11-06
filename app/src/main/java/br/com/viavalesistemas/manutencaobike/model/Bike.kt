@@ -7,7 +7,9 @@ data class Bike(
     val modelo: String? = null,
     val kmAtual: Double,
     val stravaGearId: String? = null,
-    val arquivada: Boolean = false,
+    val ativa: Boolean = true,
+    /** Nome do arquivo da foto dentro da pasta de fotos do app. */
+    val foto: String? = null,
 ) {
     val doStrava: Boolean get() = stravaGearId != null
 

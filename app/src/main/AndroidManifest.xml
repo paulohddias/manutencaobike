@@ -41,6 +41,16 @@
             </intent-filter>
         </activity>
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.arquivos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/caminhos_arquivos" />
+        </provider>
+
         <!-- WorkManager é inicializado pelo app (ManutencaoBikeApp) para usar a fábrica do Hilt. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

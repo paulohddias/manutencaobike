@@ -26,12 +26,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 
 data class BikeDetalheUiState(
     val carregando: Boolean = true,
     val bike: Bike? = null,
+    val foto: File? = null,
     val pecasInstaladas: List<DesgastePeca> = emptyList(),
     val pecasRemovidas: List<DesgastePeca> = emptyList(),
     val situacoesServico: List<SituacaoServico> = emptyList(),
@@ -56,6 +58,7 @@ interface BikeDetalheActions {
     fun onExcluirServico(servico: Servico)
     fun onAtualizarKm(km: Int)
     fun onExcluirBike()
+    fun onAlternarAtiva()
 }
 
 @HiltViewModel
@@ -81,6 +84,7 @@ class BikeDetalheViewModel @Inject constructor(
         BikeDetalheUiState(
             carregando = false,
             bike = bike,
+            foto = bikeRepository.arquivoDaFoto(bike),
             pecasInstaladas = instaladas.sortedByDescending { it.fracao },
             pecasRemovidas = removidas.sortedByDescending { it.peca.dataRemocao },
             situacoesServico = tiposServico
@@ -126,6 +130,18 @@ class BikeDetalheViewModel @Inject constructor(
         viewModelScope.launch {
             bikeRepository.excluir(bikeId)
                 .onSuccess { _efeitos.send(BikeDetalheEfeito.Voltar) }
+                .onFailure { mensagem(it) }
+        }
+    }
+
+    override fun onAlternarAtiva() {
+        val bike = uiState.value.bike ?: return
+        viewModelScope.launch {
+            bikeRepository.definirAtiva(bikeId, !bike.ativa)
+                .onSuccess {
+                    val texto = if (bike.ativa) "Bike inativada. Ela não gera mais alertas." else "Bike reativada."
+                    _efeitos.send(BikeDetalheEfeito.Mensagem(texto))
+                }
                 .onFailure { mensagem(it) }
         }
     }

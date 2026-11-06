@@ -1,0 +1,351 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "c5c0ad31e4c5326bb80131dc6d4f457e",
+    "entities": [
+      {
+        "tableName": "bikes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `marca` TEXT, `modelo` TEXT, `kmAtual` REAL NOT NULL, `stravaGearId` TEXT, `inativa` INTEGER NOT NULL, `foto` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "marca",
+            "columnName": "marca",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "modelo",
+            "columnName": "modelo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "kmAtual",
+            "columnName": "kmAtual",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stravaGearId",
+            "columnName": "stravaGearId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "inativa",
+            "columnName": "inativa",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foto",
+            "columnName": "foto",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_bikes_stravaGearId",
+            "unique": true,
+            "columnNames": [
+              "stravaGearId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_bikes_stravaGearId` ON `${TABLE_NAME}` (`stravaGearId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "tipos_peca",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `vidaUtilKmPadrao` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vidaUtilKmPadrao",
+            "columnName": "vidaUtilKmPadrao",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "tipos_servico",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `intervaloKm` INTEGER, `intervaloMeses` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intervaloKm",
+            "columnName": "intervaloKm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "intervaloMeses",
+            "columnName": "intervaloMeses",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pecas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bikeId` INTEGER NOT NULL, `tipoPecaId` INTEGER NOT NULL, `descricao` TEXT, `kmInstalacao` REAL NOT NULL, `vidaUtilKm` INTEGER NOT NULL, `dataInstalacao` INTEGER NOT NULL, `custoCentavos` INTEGER, `kmRemocao` REAL, `dataRemocao` INTEGER, FOREIGN KEY(`bikeId`) REFERENCES `bikes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`tipoPecaId`) REFERENCES `tipos_peca`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bikeId",
+            "columnName": "bikeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipoPecaId",
+            "columnName": "tipoPecaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descricao",
+            "columnName": "descricao",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "kmInstalacao",
+            "columnName": "kmInstalacao",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vidaUtilKm",
+            "columnName": "vidaUtilKm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dataInstalacao",
+            "columnName": "dataInstalacao",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "custoCentavos",
+            "columnName": "custoCentavos",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "kmRemocao",
+            "columnName": "kmRemocao",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "dataRemocao",
+            "columnName": "dataRemocao",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pecas_bikeId",
+            "unique": false,
+            "columnNames": [
+              "bikeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pecas_bikeId` ON `${TABLE_NAME}` (`bikeId`)"
+          },
+          {
+            "name": "index_pecas_tipoPecaId",
+            "unique": false,
+            "columnNames": [
+              "tipoPecaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pecas_tipoPecaId` ON `${TABLE_NAME}` (`tipoPecaId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "bikes",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "bikeId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "tipos_peca",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "tipoPecaId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "servicos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bikeId` INTEGER NOT NULL, `tipoServicoId` INTEGER NOT NULL, `data` INTEGER NOT NULL, `km` REAL NOT NULL, `custoCentavos` INTEGER, `observacoes` TEXT, FOREIGN KEY(`bikeId`) REFERENCES `bikes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`tipoServicoId`) REFERENCES `tipos_servico`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bikeId",
+            "columnName": "bikeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipoServicoId",
+            "columnName": "tipoServicoId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "km",
+            "columnName": "km",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "custoCentavos",
+            "columnName": "custoCentavos",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "observacoes",
+            "columnName": "observacoes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_servicos_bikeId",
+            "unique": false,
+            "columnNames": [
+              "bikeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_servicos_bikeId` ON `${TABLE_NAME}` (`bikeId`)"
+          },
+          {
+            "name": "index_servicos_tipoServicoId",
+            "unique": false,
+            "columnNames": [
+              "tipoServicoId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_servicos_tipoServicoId` ON `${TABLE_NAME}` (`tipoServicoId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "bikes",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "bikeId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "tipos_servico",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "tipoServicoId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c5c0ad31e4c5326bb80131dc6d4f457e')"
+    ]
+  }
+}

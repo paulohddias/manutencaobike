@@ -13,6 +13,7 @@ sealed class DataError(message: String, cause: Throwable? = null) : Exception(me
     class NaoConectado : DataError("Conecte sua conta do Strava novamente.")
     class EmUso(cause: Throwable) : DataError("Este item está em uso e não pode ser excluído.", cause)
     class Local(cause: Throwable) : DataError("Não foi possível salvar os dados.", cause)
+    class Foto(cause: Throwable) : DataError("Não foi possível carregar a foto.", cause)
 }
 
 /** Fronteira de erros dos repositórios: exceções de plataforma viram [DataError]. */

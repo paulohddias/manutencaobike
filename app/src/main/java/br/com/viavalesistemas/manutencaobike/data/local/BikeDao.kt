@@ -8,13 +8,16 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BikeDao {
-    @Query("SELECT * FROM bikes WHERE arquivada = 0 ORDER BY nome COLLATE NOCASE")
-    fun observarAtivas(): Flow<List<BikeEntity>>
+    @Query("SELECT * FROM bikes ORDER BY inativa, nome COLLATE NOCASE")
+    fun observarTodas(): Flow<List<BikeEntity>>
 
     @Query("SELECT * FROM bikes WHERE id = :id")
     fun observar(id: Long): Flow<BikeEntity?>
 
-    @Query("SELECT * FROM bikes WHERE arquivada = 0")
+    @Query("SELECT * FROM bikes WHERE id = :id")
+    suspend fun buscar(id: Long): BikeEntity?
+
+    @Query("SELECT * FROM bikes WHERE inativa = 0")
     suspend fun listarAtivas(): List<BikeEntity>
 
     @Query("SELECT * FROM bikes WHERE stravaGearId = :gearId")
@@ -28,6 +31,9 @@ interface BikeDao {
 
     @Query("UPDATE bikes SET kmAtual = :km WHERE id = :id")
     suspend fun atualizarKm(id: Long, km: Double)
+
+    @Query("UPDATE bikes SET inativa = :inativa WHERE id = :id")
+    suspend fun definirInativa(id: Long, inativa: Boolean)
 
     @Query("DELETE FROM bikes WHERE id = :id")
     suspend fun excluir(id: Long)

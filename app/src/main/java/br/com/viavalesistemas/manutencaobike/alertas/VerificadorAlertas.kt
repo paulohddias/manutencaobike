@@ -25,7 +25,7 @@ class VerificadorAlertas @Inject constructor(
         val pecasPorBike = pecaRepository.listarInstaladas().groupBy { it.bikeId }
         val servicosPorBike = servicoRepository.listarTodos().groupBy { it.bikeId }
 
-        val atuais = bikeRepository.listarBikes().flatMap { bike ->
+        val atuais = bikeRepository.listarAtivas().flatMap { bike ->
             alertasDaBike(bike, pecasPorBike[bike.id].orEmpty(), servicosPorBike[bike.id].orEmpty(), tiposServico, hoje)
         }
 

@@ -13,9 +13,10 @@ data class BikeEntity(
     val modelo: String?,
     val kmAtual: Double,
     val stravaGearId: String?,
-    val arquivada: Boolean = false,
+    val inativa: Boolean = false,
+    val foto: String? = null,
 )
 
-fun BikeEntity.toModel() = Bike(id, nome, marca, modelo, kmAtual, stravaGearId, arquivada)
+fun BikeEntity.toModel() = Bike(id, nome, marca, modelo, kmAtual, stravaGearId, ativa = !inativa, foto = foto)
 
-fun Bike.toEntity() = BikeEntity(id, nome, marca, modelo, kmAtual, stravaGearId, arquivada)
+fun Bike.toEntity() = BikeEntity(id, nome, marca, modelo, kmAtual, stravaGearId, inativa = !ativa, foto = foto)

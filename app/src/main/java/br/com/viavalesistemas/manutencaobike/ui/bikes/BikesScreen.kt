@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Sync
@@ -56,9 +59,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -76,6 +81,7 @@ import br.com.viavalesistemas.manutencaobike.R
 import br.com.viavalesistemas.manutencaobike.model.Bike
 import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
 import br.com.viavalesistemas.manutencaobike.ui.componentes.AnelDesgaste
+import br.com.viavalesistemas.manutencaobike.ui.componentes.AvatarBike
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.LocalSnackbarHostState
 import br.com.viavalesistemas.manutencaobike.ui.componentes.Pilula
@@ -128,6 +134,7 @@ private fun BikesContent(
     onSincronizar: () -> Unit,
     onDesconectarStrava: () -> Unit,
 ) {
+    var mostrarInativas by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         // O cabeçalho desenha por trás da status bar; cada parte trata o próprio inset.
         contentWindowInsets = WindowInsets(0),
@@ -163,7 +170,7 @@ private fun BikesContent(
                         CircularProgressIndicator()
                     }
                 }
-                uiState.bikes.isEmpty() -> item { EstadoVazio() }
+                uiState.bikes.isEmpty() && uiState.bikesInativas.isEmpty() -> item { EstadoVazio() }
                 else -> {
                     item {
                         Text(
@@ -172,12 +179,40 @@ private fun BikesContent(
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp),
                         )
                     }
+                    if (uiState.bikes.isEmpty()) {
+                        item {
+                            Text(
+                                "Nenhuma bike ativa no momento.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 20.dp),
+                            )
+                        }
+                    }
                     items(uiState.bikes, key = { it.bike.id }) { resumo ->
                         CartaoBike(
                             resumo = resumo,
                             onClick = { onAbrirBike(resumo.bike.id) },
                             modifier = Modifier.padding(horizontal = 16.dp),
                         )
+                    }
+                    if (uiState.bikesInativas.isNotEmpty()) {
+                        item(key = "titulo_inativas") {
+                            TituloInativas(
+                                quantidade = uiState.bikesInativas.size,
+                                aberto = mostrarInativas,
+                                onClick = { mostrarInativas = !mostrarInativas },
+                            )
+                        }
+                        if (mostrarInativas) {
+                            items(uiState.bikesInativas, key = { it.bike.id }) { resumo ->
+                                CartaoBike(
+                                    resumo = resumo,
+                                    onClick = { onAbrirBike(resumo.bike.id) },
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -302,20 +337,13 @@ private fun CartaoBike(resumo: BikeResumo, onClick: () -> Unit, modifier: Modifi
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.DirectionsBike,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
+        Row(
+            Modifier
+                .padding(16.dp)
+                .alpha(if (bike.ativa) 1f else 0.6f),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AvatarBike(resumo.foto, tamanho = 56.dp)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(bike.nome, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -335,7 +363,9 @@ private fun CartaoBike(resumo: BikeResumo, onClick: () -> Unit, modifier: Modifi
                 }
             }
             Spacer(Modifier.width(12.dp))
-            if (resumo.temItensAcompanhados) {
+            if (!bike.ativa) {
+                Pilula("Inativa", MaterialTheme.colorScheme.outline)
+            } else if (resumo.temItensAcompanhados) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AnelDesgaste(resumo.maiorDesgaste, resumo.status)
                     Spacer(Modifier.height(4.dp))
@@ -361,6 +391,30 @@ private fun textoSituacao(resumo: BikeResumo): String = when {
     resumo.itensTrocar > 0 -> "${resumo.itensTrocar} vencido(s)"
     resumo.itensAtencao > 0 -> "Atenção"
     else -> "Em dia"
+}
+
+@Composable
+private fun TituloInativas(quantidade: Int, aberto: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClickLabel = if (aberto) "Ocultar inativas" else "Mostrar inativas", onClick = onClick)
+            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
+    ) {
+        Text(
+            "Inativas ($quantidade)",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            if (aberto) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(12.dp),
+        )
+    }
 }
 
 @Composable
@@ -424,6 +478,7 @@ private fun BikesContentPreview() {
                         BikeResumo(Bike(2, "MTB", "Caloi", "Elite", 2_130.0), 0, 2, 0.86),
                         BikeResumo(Bike(3, "Urbana", kmAtual = 640.0), 0, 0, 0.32),
                     ),
+                    bikesInativas = listOf(BikeResumo(Bike(4, "Antiga", kmAtual = 12_000.0, ativa = false), 0, 0)),
                 ),
                 onAbrirBike = {}, onAdicionarBike = {}, onAbrirCatalogo = {},
                 onConectarStrava = {}, onSincronizar = {}, onDesconectarStrava = {},

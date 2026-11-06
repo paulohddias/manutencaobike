@@ -1,5 +1,6 @@
 package br.com.viavalesistemas.manutencaobike.data.local
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -12,8 +13,9 @@ import androidx.room.TypeConverters
         PecaEntity::class,
         ServicoEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2, spec = Migracao1Para2::class)],
 )
 @TypeConverters(Conversores::class)
 abstract class AppDatabase : RoomDatabase() {
