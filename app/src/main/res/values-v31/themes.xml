@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Manutencaobike" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fundo_janela</item>
+        <item name="android:windowSplashScreenBackground">@color/marca_ardosia</item>
+    </style>
+</resources>

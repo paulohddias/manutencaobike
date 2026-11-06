@@ -1,6 +1,8 @@
 package br.com.viavalesistemas.manutencaobike
 
 import android.content.Intent
+import android.graphics.Color
+import androidx.activity.SystemBarStyle
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,7 +20,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Todas as telas começam com o cabeçalho escuro da marca, então os ícones da status bar são sempre claros.
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
         // Só na primeira criação: após rotação o mesmo intent seria processado de novo.
         if (savedInstanceState == null) tratarIntent(intent)
         setContent {

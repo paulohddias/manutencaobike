@@ -7,42 +7,51 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,23 +59,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.viavalesistemas.manutencaobike.R
 import br.com.viavalesistemas.manutencaobike.model.Bike
 import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
+import br.com.viavalesistemas.manutencaobike.ui.componentes.AnelDesgaste
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.LocalSnackbarHostState
-import br.com.viavalesistemas.manutencaobike.ui.componentes.RotuloStatus
+import br.com.viavalesistemas.manutencaobike.ui.componentes.Pilula
+import br.com.viavalesistemas.manutencaobike.ui.componentes.corDoStatus
 import br.com.viavalesistemas.manutencaobike.ui.formatarKm
 import br.com.viavalesistemas.manutencaobike.ui.theme.ManutencaobikeTheme
-
-private val LaranjaStrava = Color(0xFFFC4C02)
+import br.com.viavalesistemas.manutencaobike.ui.theme.marca
 
 @Composable
 fun BikesScreen(
@@ -102,7 +118,6 @@ fun BikesScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BikesContent(
     uiState: BikesUiState,
@@ -113,151 +128,261 @@ private fun BikesContent(
     onSincronizar: () -> Unit,
     onDesconectarStrava: () -> Unit,
 ) {
-    var menuAberto by remember { mutableStateOf(false) }
-
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Minhas bikes") },
-                actions = {
-                    if (uiState.stravaConectado) {
-                        if (uiState.sincronizando) {
-                            CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
-                        } else {
-                            IconButton(onClick = onSincronizar) {
-                                Icon(Icons.Default.Sync, contentDescription = "Sincronizar com o Strava")
-                            }
-                        }
-                    }
-                    IconButton(onClick = { menuAberto = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Mais opções")
-                    }
-                    DropdownMenu(expanded = menuAberto, onDismissRequest = { menuAberto = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Tipos de peças e serviços") },
-                            leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
-                            onClick = {
-                                menuAberto = false
-                                onAbrirCatalogo()
-                            },
-                        )
-                        if (uiState.stravaConectado) {
-                            DropdownMenuItem(
-                                text = { Text("Desconectar do Strava") },
-                                onClick = {
-                                    menuAberto = false
-                                    onDesconectarStrava()
-                                },
-                            )
-                        }
-                    }
-                },
-            )
-        },
+        // O cabeçalho desenha por trás da status bar; cada parte trata o próprio inset.
+        contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAdicionarBike,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Bike manual") },
+                text = { Text("Nova bike") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.navigationBarsPadding(),
             )
         },
-        snackbarHost = { SnackbarHost(LocalSnackbarHostState.current) },
+        snackbarHost = { SnackbarHost(LocalSnackbarHostState.current, Modifier.navigationBarsPadding()) },
     ) { padding ->
-        if (uiState.carregando) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+            contentPadding = PaddingValues(bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
             item {
-                CartaoStrava(
-                    configurado = uiState.stravaConfigurado,
-                    conectado = uiState.stravaConectado,
-                    nomeAtleta = uiState.nomeAtleta,
-                    onConectar = onConectarStrava,
+                Cabecalho(
+                    uiState = uiState,
+                    onAbrirCatalogo = onAbrirCatalogo,
+                    onConectarStrava = onConectarStrava,
+                    onSincronizar = onSincronizar,
+                    onDesconectarStrava = onDesconectarStrava,
                 )
             }
-            if (uiState.bikes.isEmpty()) {
-                item {
-                    Text(
-                        "Nenhuma bike ainda. Conecte o Strava para importar suas bikes ou cadastre uma manualmente.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 24.dp),
-                    )
+            when {
+                uiState.carregando -> item {
+                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                uiState.bikes.isEmpty() -> item { EstadoVazio() }
+                else -> {
+                    item {
+                        Text(
+                            "Suas bikes",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp),
+                        )
+                    }
+                    items(uiState.bikes, key = { it.bike.id }) { resumo ->
+                        CartaoBike(
+                            resumo = resumo,
+                            onClick = { onAbrirBike(resumo.bike.id) },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                    }
                 }
             }
-            items(uiState.bikes, key = { it.bike.id }) { resumo ->
-                CartaoBike(resumo = resumo, onClick = { onAbrirBike(resumo.bike.id) })
-            }
         }
     }
 }
 
 @Composable
-private fun CartaoStrava(configurado: Boolean, conectado: Boolean, nomeAtleta: String?, onConectar: () -> Unit) {
-    when {
-        conectado -> Text(
-            text = "Strava conectado" + (nomeAtleta?.let { " · $it" } ?: ""),
-            style = MaterialTheme.typography.labelLarge,
-            color = LaranjaStrava,
-        )
-        !configurado -> Card(Modifier.fillMaxWidth()) {
-            Text(
-                "Para importar bikes do Strava, preencha strava.clientId e strava.clientSecret no local.properties e recompile o app.",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(16.dp),
+private fun Cabecalho(
+    uiState: BikesUiState,
+    onAbrirCatalogo: () -> Unit,
+    onConectarStrava: () -> Unit,
+    onSincronizar: () -> Unit,
+    onDesconectarStrava: () -> Unit,
+) {
+    val marca = MaterialTheme.marca
+    var menuAberto by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .background(Brush.verticalGradient(listOf(marca.cabecalho, marca.cabecalhoFim)))
+            .statusBarsPadding()
+            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(R.drawable.logo_marca),
+                contentDescription = "Logo VVS",
+                modifier = Modifier.size(44.dp),
             )
-        }
-        else -> Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Importe suas bikes do Strava", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.size(4.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Manutenção Bike", style = MaterialTheme.typography.titleLarge, color = marca.sobreCabecalho)
                 Text(
-                    "A quilometragem é atualizada automaticamente para calcular o desgaste das peças.",
+                    uiState.nomeAtleta?.let { "Olá, ${it.substringBefore(' ')}!" } ?: "Sua bike sempre em dia",
                     style = MaterialTheme.typography.bodyMedium,
+                    color = marca.sobreCabecalhoSuave,
                 )
-                Spacer(Modifier.size(12.dp))
-                Button(
-                    onClick = onConectar,
-                    colors = ButtonDefaults.buttonColors(containerColor = LaranjaStrava, contentColor = Color.White),
+            }
+            if (uiState.stravaConectado) {
+                if (uiState.sincronizando) {
+                    CircularProgressIndicator(
+                        color = marca.sobreCabecalho,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.padding(12.dp).size(24.dp),
+                    )
+                } else {
+                    IconButton(onClick = onSincronizar) {
+                        Icon(Icons.Default.Sync, contentDescription = "Sincronizar com o Strava", tint = marca.sobreCabecalho)
+                    }
+                }
+            }
+            Box {
+                IconButton(onClick = { menuAberto = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Mais opções", tint = marca.sobreCabecalho)
+                }
+                DropdownMenu(expanded = menuAberto, onDismissRequest = { menuAberto = false }) {
+                    DropdownMenuItem(
+                        text = { Text("Tipos de peças e serviços") },
+                        leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                        onClick = { menuAberto = false; onAbrirCatalogo() },
+                    )
+                    if (uiState.stravaConectado) {
+                        DropdownMenuItem(
+                            text = { Text("Desconectar do Strava") },
+                            leadingIcon = { Icon(Icons.Default.LinkOff, contentDescription = null) },
+                            onClick = { menuAberto = false; onDesconectarStrava() },
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Row(Modifier.padding(end = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Indicador("Bikes", uiState.bikes.size.toString(), marca.sobreCabecalho, Modifier.weight(1f))
+            Indicador("Para trocar", uiState.bikes.sumOf { it.itensTrocar }.toString(), marca.trocar, Modifier.weight(1f))
+            Indicador("Atenção", uiState.bikes.sumOf { it.itensAtencao }.toString(), marca.atencao, Modifier.weight(1f))
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Box(Modifier.padding(end = 12.dp)) {
+            when {
+                uiState.stravaConectado -> Pilula("● Strava conectado", marca.strava)
+                uiState.stravaConfigurado -> Button(
+                    onClick = onConectarStrava,
+                    colors = ButtonDefaults.buttonColors(containerColor = marca.strava, contentColor = Color.White),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
                 ) { Text("Conectar com o Strava") }
+                else -> Text(
+                    "Para importar do Strava, preencha strava.clientId e strava.clientSecret no local.properties.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = marca.sobreCabecalhoSuave,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CartaoBike(resumo: BikeResumo, onClick: () -> Unit) {
-    ElevatedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+private fun Indicador(rotulo: String, valor: String, cor: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White.copy(alpha = 0.08f))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Text(valor, style = MaterialTheme.typography.headlineSmall, color = cor)
+        Text(rotulo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.marca.sobreCabecalhoSuave)
+    }
+}
+
+@Composable
+private fun CartaoBike(resumo: BikeResumo, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val bike = resumo.bike
+    Card(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.DirectionsBike,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(bike.nome, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                bike.descricao?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Pilula(formatarKm(bike.kmAtual), MaterialTheme.colorScheme.secondary)
+                    if (bike.doStrava) Pilula("Strava", MaterialTheme.marca.strava)
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AnelDesgaste(resumo.maiorDesgaste, resumo.status)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    textoSituacao(resumo),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = corDoStatus(resumo.status),
+                )
+            }
+        }
+    }
+}
+
+private fun textoSituacao(resumo: BikeResumo): String = when {
+    resumo.itensTrocar > 0 -> "${resumo.itensTrocar} vencido(s)"
+    resumo.itensAtencao > 0 -> "Atenção"
+    else -> "Em dia"
+}
+
+@Composable
+private fun EstadoVazio() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+        ) {
             Icon(
                 Icons.AutoMirrored.Filled.DirectionsBike,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(48.dp),
             )
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(resumo.bike.nome, style = MaterialTheme.typography.titleMedium)
-                resumo.bike.descricao?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text(
-                    formatarKm(resumo.bike.kmAtual) + if (resumo.bike.doStrava) " · Strava" else "",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (resumo.itensTrocar > 0) RotuloStatus(StatusDesgaste.TROCAR, textoTrocar = "${resumo.itensTrocar} vencido(s)")
-                if (resumo.itensAtencao > 0) RotuloStatus(StatusDesgaste.ATENCAO)
-            }
         }
+        Spacer(Modifier.height(16.dp))
+        Text("Nenhuma bike ainda", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Conecte o Strava para importar suas bikes ou toque em \"Nova bike\" para cadastrar manualmente.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -274,20 +399,21 @@ private fun PedirPermissaoNotificacao() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 800)
 @Composable
 private fun BikesContentPreview() {
     ManutencaobikeTheme {
-        androidx.compose.runtime.CompositionLocalProvider(
-            LocalSnackbarHostState provides remember { androidx.compose.material3.SnackbarHostState() },
-        ) {
+        CompositionLocalProvider(LocalSnackbarHostState provides remember { SnackbarHostState() }) {
             BikesContent(
                 uiState = BikesUiState(
                     carregando = false,
                     stravaConfigurado = true,
+                    stravaConectado = true,
+                    nomeAtleta = "Paulo Dias",
                     bikes = listOf(
-                        BikeResumo(Bike(1, "Speed", "Specialized", "Allez", 8_450.0, "b1"), itensTrocar = 1, itensAtencao = 0),
-                        BikeResumo(Bike(2, "MTB", "Caloi", "Elite", 2_130.0), itensTrocar = 0, itensAtencao = 2),
+                        BikeResumo(Bike(1, "Speed", "Specialized", "Allez", 8_450.0, "b1"), 1, 0, 1.05),
+                        BikeResumo(Bike(2, "MTB", "Caloi", "Elite", 2_130.0), 0, 2, 0.86),
+                        BikeResumo(Bike(3, "Urbana", kmAtual = 640.0), 0, 0, 0.32),
                     ),
                 ),
                 onAbrirBike = {}, onAdicionarBike = {}, onAbrirCatalogo = {},

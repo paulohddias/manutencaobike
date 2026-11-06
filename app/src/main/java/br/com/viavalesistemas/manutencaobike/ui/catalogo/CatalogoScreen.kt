@@ -41,6 +41,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.viavalesistemas.manutencaobike.model.TipoPeca
 import br.com.viavalesistemas.manutencaobike.model.TipoServico
+import androidx.compose.material3.MaterialTheme
+import br.com.viavalesistemas.manutencaobike.ui.componentes.AbaMarca
+import br.com.viavalesistemas.manutencaobike.ui.componentes.BotaoAdicionar
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.Confirmacao
 import br.com.viavalesistemas.manutencaobike.ui.componentes.DialogoConfirmacao
@@ -64,16 +67,16 @@ fun CatalogoScreen(onVoltar: () -> Unit, viewModel: CatalogoViewModel = hiltView
     Scaffold(
         topBar = { TopoComVoltar("Peças e serviços", onVoltar) },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
+            BotaoAdicionar(if (aba == 0) "Novo tipo de peça" else "Novo tipo de serviço", onClick = {
                 if (aba == 0) editandoPeca = TipoPeca(nome = "") else editandoServico = TipoServico(nome = "")
-            }) { Icon(Icons.Default.Add, contentDescription = "Adicionar tipo") }
+            })
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            PrimaryTabRow(selectedTabIndex = aba) {
-                Tab(selected = aba == 0, onClick = { aba = 0 }, text = { Text("Peças") })
-                Tab(selected = aba == 1, onClick = { aba = 1 }, text = { Text("Serviços") })
+            PrimaryTabRow(selectedTabIndex = aba, containerColor = MaterialTheme.colorScheme.background) {
+                AbaMarca("Peças", aba == 0) { aba = 0 }
+                AbaMarca("Serviços", aba == 1) { aba = 1 }
             }
             LazyColumn(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),

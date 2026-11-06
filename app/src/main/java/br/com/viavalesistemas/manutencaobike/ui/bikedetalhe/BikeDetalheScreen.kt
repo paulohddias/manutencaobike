@@ -1,6 +1,17 @@
 package br.com.viavalesistemas.manutencaobike.ui.bikedetalhe
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
+import br.com.viavalesistemas.manutencaobike.ui.componentes.AbaMarca
+import br.com.viavalesistemas.manutencaobike.ui.componentes.BotaoAdicionar
+import br.com.viavalesistemas.manutencaobike.ui.theme.marca
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -120,16 +131,8 @@ private fun BikeDetalheContent(
         },
         floatingActionButton = {
             when (aba) {
-                Aba.PECAS -> ExtendedFloatingActionButton(
-                    onClick = onInstalarPeca,
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Instalar peça") },
-                )
-                Aba.SERVICOS -> ExtendedFloatingActionButton(
-                    onClick = onRegistrarServico,
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Registrar serviço") },
-                )
+                Aba.PECAS -> BotaoAdicionar("Instalar peça", onInstalarPeca)
+                Aba.SERVICOS -> BotaoAdicionar("Registrar serviço", onRegistrarServico)
                 Aba.HISTORICO -> Unit
             }
         },
@@ -142,10 +145,14 @@ private fun BikeDetalheContent(
             return@Scaffold
         }
         Column(Modifier.fillMaxSize().padding(padding)) {
-            CabecalhoBike(bike, uiState.custoTotal)
-            PrimaryTabRow(selectedTabIndex = abaSelecionada) {
+            CabecalhoBike(bike, uiState)
+            PrimaryTabRow(
+                selectedTabIndex = abaSelecionada,
+                containerColor = MaterialTheme.colorScheme.background,
+                modifier = Modifier.padding(top = 4.dp),
+            ) {
                 Aba.entries.forEachIndexed { indice, item ->
-                    Tab(selected = abaSelecionada == indice, onClick = { abaSelecionada = indice }, text = { Text(item.titulo) })
+                    AbaMarca(item.titulo, abaSelecionada == indice) { abaSelecionada = indice }
                 }
             }
             when (aba) {
@@ -169,24 +176,49 @@ private fun BikeDetalheContent(
     }
 }
 
+/** Continua a barra superior escura, com os números principais da bike. */
 @Composable
-private fun CabecalhoBike(bike: Bike, custoTotal: Long) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+private fun CabecalhoBike(bike: Bike, uiState: BikeDetalheUiState) {
+    val marca = MaterialTheme.marca
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .background(Brush.verticalGradient(listOf(marca.cabecalho, marca.cabecalhoFim)))
+            .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
     ) {
-        Column {
-            Text(formatarKm(bike.kmAtual), style = MaterialTheme.typography.headlineMedium)
-            Text(
-                bike.descricao ?: if (bike.doStrava) "Sincronizada com o Strava" else "Cadastro manual",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Text(
+            bike.descricao ?: if (bike.doStrava) "Sincronizada com o Strava" else "Cadastro manual",
+            style = MaterialTheme.typography.bodyMedium,
+            color = marca.sobreCabecalhoSuave,
+        )
+        Text(formatarKm(bike.kmAtual), style = MaterialTheme.typography.displaySmall, color = marca.sobreCabecalho)
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val pecasVencidas = uiState.pecasInstaladas.count { it.status == StatusDesgaste.TROCAR }
+            val servicosVencidos = uiState.situacoesServico.count { it.status == StatusDesgaste.TROCAR }
+            NumeroCabecalho("Peças", uiState.pecasInstaladas.size.toString(), marca.sobreCabecalho, Modifier.weight(1f))
+            NumeroCabecalho(
+                "Vencidos",
+                (pecasVencidas + servicosVencidos).toString(),
+                if (pecasVencidas + servicosVencidos > 0) marca.trocar else marca.sobreCabecalho,
+                Modifier.weight(1f),
             )
+            NumeroCabecalho("Gasto", formatarMoeda(uiState.custoTotal), marca.sobreCabecalho, Modifier.weight(1.4f))
         }
-        Column(horizontalAlignment = Alignment.End) {
-            Text("Gasto total", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(formatarMoeda(custoTotal), style = MaterialTheme.typography.titleMedium)
-        }
+    }
+}
+
+@Composable
+private fun NumeroCabecalho(rotulo: String, valor: String, cor: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White.copy(alpha = 0.08f))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Text(valor, style = MaterialTheme.typography.titleMedium, color = cor, maxLines = 1)
+        Text(rotulo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.marca.sobreCabecalhoSuave)
     }
 }
 

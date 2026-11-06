@@ -10,6 +10,9 @@ import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
 import br.com.viavalesistemas.manutencaobike.model.Bike
 import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
 import br.com.viavalesistemas.manutencaobike.model.alertasDaBike
+import br.com.viavalesistemas.manutencaobike.model.desgaste
+import br.com.viavalesistemas.manutencaobike.model.situacaoServico
+import br.com.viavalesistemas.manutencaobike.model.statusPorFracao
 import br.com.viavalesistemas.manutencaobike.ui.mensagemParaUsuario
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +26,15 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
-data class BikeResumo(val bike: Bike, val itensTrocar: Int, val itensAtencao: Int)
+data class BikeResumo(
+    val bike: Bike,
+    val itensTrocar: Int,
+    val itensAtencao: Int,
+    /** Desgaste do item mais gasto (peça ou serviço); 0 quando não há nada cadastrado. */
+    val maiorDesgaste: Double = 0.0,
+) {
+    val status: StatusDesgaste get() = statusPorFracao(maiorDesgaste)
+}
 
 data class BikesUiState(
     val carregando: Boolean = true,
@@ -60,11 +71,16 @@ class BikesViewModel @Inject constructor(
         val pecasPorBike = pecas.groupBy { it.bikeId }
         val servicosPorBike = servicos.groupBy { it.bikeId }
         bikes.map { bike ->
-            val alertas = alertasDaBike(bike, pecasPorBike[bike.id].orEmpty(), servicosPorBike[bike.id].orEmpty(), tiposServico, hoje)
+            val pecasDaBike = pecasPorBike[bike.id].orEmpty()
+            val servicosDaBike = servicosPorBike[bike.id].orEmpty()
+            val alertas = alertasDaBike(bike, pecasDaBike, servicosDaBike, tiposServico, hoje)
+            val desgastes = pecasDaBike.map { it.desgaste(bike.kmAtual).fracao } +
+                tiposServico.filter { it.temIntervalo }.mapNotNull { situacaoServico(it, servicosDaBike, bike.kmAtual, hoje).fracao }
             BikeResumo(
                 bike = bike,
                 itensTrocar = alertas.count { it.status == StatusDesgaste.TROCAR },
                 itensAtencao = alertas.count { it.status == StatusDesgaste.ATENCAO },
+                maiorDesgaste = desgastes.maxOrNull() ?: 0.0,
             )
         }
     }
