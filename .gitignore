@@ -1,16 +1,35 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
 /captures
 .externalNativeBuild
 .cxx
+
+# Configuração local (contém o segredo do Strava)
 local.properties
-.kotlin
+
+# IDE (Android Studio / IntelliJ / VS Code)
+.idea/
+*.iml
+.vscode/
+
+# Artefatos de build e assinatura
+*.apk
+*.aab
+*.ap_
+*.dex
+*.jks
+*.keystore
+/release/
+output-metadata.json
+
+# Logs e arquivos temporários
+*.log
+*.hprof
+*.tmp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
