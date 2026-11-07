@@ -27,7 +27,9 @@ import kotlin.math.roundToInt
 @Singleton
 class FotosBike @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val pasta: File get() = File(context.filesDir, PASTA).apply { mkdirs() }
+    private val pasta: File get() = pastaFotos(context).apply { mkdirs() }
+
+    fun listar(): List<File> = pasta.listFiles { arquivo -> NOME_VALIDO.matches(arquivo.name) }.orEmpty().toList()
 
     fun arquivo(nome: String): File = File(pasta, nome)
 
@@ -74,10 +76,14 @@ class FotosBike @Inject constructor(@ApplicationContext private val context: Con
         return scale((width * fator).roundToInt(), (height * fator).roundToInt())
     }
 
-    private companion object {
-        const val PASTA = "fotos"
-        const val PASTA_CAMERA = "camera"
-        const val LADO_MAXIMO = 1600
-        const val QUALIDADE = 85
+    companion object {
+        val NOME_VALIDO = Regex("bike_[0-9a-f-]{36}\\.jpg")
+
+        fun pastaFotos(context: Context): File = File(context.filesDir, PASTA)
+
+        private const val PASTA = "fotos"
+        private const val PASTA_CAMERA = "camera"
+        private const val LADO_MAXIMO = 1600
+        private const val QUALIDADE = 85
     }
 }

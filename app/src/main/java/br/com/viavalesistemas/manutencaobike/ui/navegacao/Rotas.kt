@@ -21,3 +21,6 @@ data class RotaServicoForm(val bikeId: Long)
 
 @Serializable
 data object RotaCatalogo
+
+@Serializable
+data object RotaBackup

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
+import br.com.viavalesistemas.manutencaobike.data.backup.PacoteBackup
 import br.com.viavalesistemas.manutencaobike.data.local.AppDatabase
 import br.com.viavalesistemas.manutencaobike.data.local.CatalogoInicial
 import dagger.Module
@@ -21,10 +22,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun database(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, "manutencao_bike.db")
+    fun database(@ApplicationContext context: Context): AppDatabase {
+        // Uma restauração de backup só pode trocar os arquivos antes de o Room abrir o banco.
+        PacoteBackup.aplicarRestauracaoPendente(context)
+        return Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.NOME)
             .addCallback(CatalogoInicial)
             .build()
+    }
 
     @Provides
     fun bikeDao(db: AppDatabase) = db.bikeDao()

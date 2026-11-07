@@ -32,7 +32,12 @@ android {
             if (file.exists()) file.inputStream().use { load(it) }
         }
         buildConfigField("String", "STRAVA_CLIENT_ID", "\"${localProps.getProperty("strava.clientId", "")}\"")
-        buildConfigField("String", "STRAVA_CLIENT_SECRET", "\"${localProps.getProperty("strava.clientSecret", "")}\"")
+        // O client_secret do Strava fica só no servidor (servidor/manutencaobike_privado/config.php).
+        buildConfigField(
+            "String",
+            "API_URL",
+            "\"${localProps.getProperty("api.url", "https://api.viavalesistemas.com.br/manutencaobike/v1/")}\"",
+        )
     }
 
     buildTypes {

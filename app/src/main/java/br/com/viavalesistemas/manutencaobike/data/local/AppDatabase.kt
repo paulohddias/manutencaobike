@@ -13,7 +13,7 @@ import androidx.room.TypeConverters
         PecaEntity::class,
         ServicoEntity::class,
     ],
-    version = 2,
+    version = AppDatabase.VERSAO,
     exportSchema = true,
     autoMigrations = [AutoMigration(from = 1, to = 2, spec = Migracao1Para2::class)],
 )
@@ -23,4 +23,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun catalogoDao(): CatalogoDao
     abstract fun pecaDao(): PecaDao
     abstract fun servicoDao(): ServicoDao
+
+    companion object {
+        const val NOME = "manutencao_bike.db"
+        const val VERSAO = 2
+    }
 }

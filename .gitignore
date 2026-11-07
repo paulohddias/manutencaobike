@@ -33,3 +33,7 @@ output-metadata.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Servidor: segredos e dados dos usuários
+servidor/manutencaobike_privado/config.php
+servidor/manutencaobike_privado/dados/

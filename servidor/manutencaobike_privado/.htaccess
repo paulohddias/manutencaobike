@@ -1,0 +1,2 @@
+# Esta pasta não deve ser servida pela web; isto é só uma segunda proteção.
+Require all denied

@@ -3,7 +3,9 @@ package br.com.viavalesistemas.manutencaobike.ui
 import br.com.viavalesistemas.manutencaobike.data.DataError
 import java.math.RoundingMode
 import java.text.NumberFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -11,12 +13,21 @@ import kotlin.math.roundToLong
 
 private val localeBr = Locale.forLanguageTag("pt-BR")
 private val formatoData = DateTimeFormatter.ofPattern("dd/MM/yyyy", localeBr)
+private val formatoDataHora = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm", localeBr)
 
 fun formatarKm(km: Double): String = "${NumberFormat.getIntegerInstance(localeBr).format(km.roundToLong())} km"
 
 fun formatarMoeda(centavos: Long): String = NumberFormat.getCurrencyInstance(localeBr).format(centavos / 100.0)
 
 fun formatarData(data: LocalDate): String = data.format(formatoData)
+
+fun formatarDataHora(instante: Instant): String = instante.atZone(ZoneId.systemDefault()).format(formatoDataHora)
+
+fun formatarTamanho(bytes: Long): String = when {
+    bytes >= 1024 * 1024 -> "%.1f MB".format(localeBr, bytes / (1024.0 * 1024.0))
+    bytes >= 1024 -> "${bytes / 1024} KB"
+    else -> "$bytes bytes"
+}
 
 fun formatarPercentual(fracao: Double): String = "${(fracao * 100).roundToInt()}%"
 

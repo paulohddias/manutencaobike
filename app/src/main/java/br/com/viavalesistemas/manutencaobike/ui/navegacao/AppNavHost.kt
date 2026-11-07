@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import br.com.viavalesistemas.manutencaobike.ui.backup.BackupScreen
 import br.com.viavalesistemas.manutencaobike.ui.bikedetalhe.BikeDetalheScreen
 import br.com.viavalesistemas.manutencaobike.ui.bikeform.BikeFormScreen
 import br.com.viavalesistemas.manutencaobike.ui.bikes.BikesScreen
@@ -32,6 +33,7 @@ fun AppNavHost(mensagensGlobais: Flow<String>) {
                     onAbrirBike = { navController.navigate(RotaBikeDetalhe(it)) },
                     onAdicionarBike = { navController.navigate(RotaBikeForm()) },
                     onAbrirCatalogo = { navController.navigate(RotaCatalogo) },
+                    onAbrirBackup = { navController.navigate(RotaBackup) },
                 )
             }
             composable<RotaBikeForm> { BikeFormScreen(onVoltar = voltar) }
@@ -46,6 +48,7 @@ fun AppNavHost(mensagensGlobais: Flow<String>) {
             composable<RotaPecaForm> { PecaFormScreen(onVoltar = voltar) }
             composable<RotaServicoForm> { ServicoFormScreen(onVoltar = voltar) }
             composable<RotaCatalogo> { CatalogoScreen(onVoltar = voltar) }
+            composable<RotaBackup> { BackupScreen(onVoltar = voltar) }
         }
     }
 }

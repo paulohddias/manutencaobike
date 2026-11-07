@@ -6,6 +6,8 @@ import br.com.viavalesistemas.manutencaobike.data.DataError
 import br.com.viavalesistemas.manutencaobike.data.comTratamentoDeErros
 import br.com.viavalesistemas.manutencaobike.data.local.BikeDao
 import br.com.viavalesistemas.manutencaobike.data.local.BikeEntity
+import br.com.viavalesistemas.manutencaobike.data.servidor.CodigoDto
+import br.com.viavalesistemas.manutencaobike.data.servidor.VvsApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaAuthApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaTokenStore
@@ -17,11 +19,11 @@ import javax.inject.Singleton
 class StravaRepository @Inject constructor(
     private val api: StravaApi,
     private val authApi: StravaAuthApi,
+    private val vvsApi: VvsApi,
     private val tokenStore: StravaTokenStore,
     private val bikeDao: BikeDao,
 ) {
-    val configurado: Boolean =
-        BuildConfig.STRAVA_CLIENT_ID.isNotBlank() && BuildConfig.STRAVA_CLIENT_SECRET.isNotBlank()
+    val configurado: Boolean = BuildConfig.STRAVA_CLIENT_ID.isNotBlank()
 
     val conectado: Flow<Boolean> = tokenStore.conectado
     val nomeAtleta: Flow<String?> = tokenStore.nomeAtleta
@@ -36,15 +38,15 @@ class StravaRepository @Inject constructor(
         .toString()
 
     suspend fun conectar(codigo: String): Result<Unit> = comTratamentoDeErros {
-        val token = authApi.trocarCodigo(BuildConfig.STRAVA_CLIENT_ID, BuildConfig.STRAVA_CLIENT_SECRET, codigo)
-        tokenStore.salvar(token)
+        tokenStore.salvarConexao(vvsApi.conectarStrava(CodigoDto(codigo)))
     }
 
     suspend fun desconectar() {
         tokenStore.tokens()?.let { tokens ->
-            // Falhar ao revogar no Strava não deve impedir a desconexão local.
+            // Falhar ao revogar no Strava ou no servidor não deve impedir a desconexão local.
             comTratamentoDeErros { authApi.desautorizar(tokens.accessToken) }
         }
+        comTratamentoDeErros { vvsApi.encerrarSessao() }
         tokenStore.limpar()
     }
 

@@ -1,6 +1,8 @@
 package br.com.viavalesistemas.manutencaobike.di
 
 import br.com.viavalesistemas.manutencaobike.BuildConfig
+import br.com.viavalesistemas.manutencaobike.data.servidor.SessaoInterceptor
+import br.com.viavalesistemas.manutencaobike.data.servidor.VvsApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaAuthApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaAuthInterceptor
@@ -59,6 +61,19 @@ object NetworkModule {
     @Singleton
     fun clienteApi(logging: HttpLoggingInterceptor, auth: StravaAuthInterceptor): OkHttpClient =
         clienteBase(logging).addInterceptor(auth).build()
+
+    // Sem o interceptor do Strava: é por aqui que o token do Strava é renovado.
+    // Timeout maior porque também transporta os backups.
+    @Provides
+    @Singleton
+    fun vvsApi(logging: HttpLoggingInterceptor, sessao: SessaoInterceptor, json: Json): VvsApi {
+        val cliente = clienteBase(logging)
+            .readTimeout(2, TimeUnit.MINUTES)
+            .writeTimeout(2, TimeUnit.MINUTES)
+            .addInterceptor(sessao)
+            .build()
+        return retrofit(BuildConfig.API_URL, cliente, json).create()
+    }
 
     @Provides
     @Singleton

@@ -9,11 +9,12 @@ import kotlin.coroutines.cancellation.CancellationException
 
 sealed class DataError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class Rede(cause: Throwable) : DataError("Sem conexão. Verifique sua internet.", cause)
-    class Servidor(val codigo: Int, cause: Throwable) : DataError("O Strava respondeu com erro ($codigo).", cause)
+    class Servidor(val codigo: Int, cause: Throwable) : DataError("O servidor respondeu com erro ($codigo).", cause)
     class NaoConectado : DataError("Conecte sua conta do Strava novamente.")
     class EmUso(cause: Throwable) : DataError("Este item está em uso e não pode ser excluído.", cause)
     class Local(cause: Throwable) : DataError("Não foi possível salvar os dados.", cause)
     class Foto(cause: Throwable) : DataError("Não foi possível carregar a foto.", cause)
+    class Backup(mensagem: String, cause: Throwable? = null) : DataError(mensagem, cause)
 }
 
 /** Fronteira de erros dos repositórios: exceções de plataforma viram [DataError]. */

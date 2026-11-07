@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LinkOff
@@ -95,6 +96,7 @@ fun BikesScreen(
     onAbrirBike: (Long) -> Unit,
     onAdicionarBike: () -> Unit,
     onAbrirCatalogo: () -> Unit,
+    onAbrirBackup: () -> Unit,
     viewModel: BikesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -118,6 +120,7 @@ fun BikesScreen(
         onAbrirBike = onAbrirBike,
         onAdicionarBike = onAdicionarBike,
         onAbrirCatalogo = onAbrirCatalogo,
+        onAbrirBackup = onAbrirBackup,
         onConectarStrava = viewModel::onConectarStrava,
         onSincronizar = viewModel::onSincronizar,
         onDesconectarStrava = viewModel::onDesconectarStrava,
@@ -130,6 +133,7 @@ private fun BikesContent(
     onAbrirBike: (Long) -> Unit,
     onAdicionarBike: () -> Unit,
     onAbrirCatalogo: () -> Unit,
+    onAbrirBackup: () -> Unit,
     onConectarStrava: () -> Unit,
     onSincronizar: () -> Unit,
     onDesconectarStrava: () -> Unit,
@@ -159,6 +163,7 @@ private fun BikesContent(
                 Cabecalho(
                     uiState = uiState,
                     onAbrirCatalogo = onAbrirCatalogo,
+                    onAbrirBackup = onAbrirBackup,
                     onConectarStrava = onConectarStrava,
                     onSincronizar = onSincronizar,
                     onDesconectarStrava = onDesconectarStrava,
@@ -224,6 +229,7 @@ private fun BikesContent(
 private fun Cabecalho(
     uiState: BikesUiState,
     onAbrirCatalogo: () -> Unit,
+    onAbrirBackup: () -> Unit,
     onConectarStrava: () -> Unit,
     onSincronizar: () -> Unit,
     onDesconectarStrava: () -> Unit,
@@ -277,6 +283,11 @@ private fun Cabecalho(
                         leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
                         onClick = { menuAberto = false; onAbrirCatalogo() },
                     )
+                    DropdownMenuItem(
+                        text = { Text("Backup na nuvem") },
+                        leadingIcon = { Icon(Icons.Default.CloudUpload, contentDescription = null) },
+                        onClick = { menuAberto = false; onAbrirBackup() },
+                    )
                     if (uiState.stravaConectado) {
                         DropdownMenuItem(
                             text = { Text("Desconectar do Strava") },
@@ -305,7 +316,7 @@ private fun Cabecalho(
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                 ) { Text("Conectar com o Strava") }
                 else -> Text(
-                    "Para importar do Strava, preencha strava.clientId e strava.clientSecret no local.properties.",
+                    "Para importar do Strava, preencha strava.clientId no local.properties.",
                     style = MaterialTheme.typography.bodySmall,
                     color = marca.sobreCabecalhoSuave,
                 )
@@ -480,7 +491,7 @@ private fun BikesContentPreview() {
                     ),
                     bikesInativas = listOf(BikeResumo(Bike(4, "Antiga", kmAtual = 12_000.0, ativa = false), 0, 0)),
                 ),
-                onAbrirBike = {}, onAdicionarBike = {}, onAbrirCatalogo = {},
+                onAbrirBike = {}, onAdicionarBike = {}, onAbrirCatalogo = {}, onAbrirBackup = {},
                 onConectarStrava = {}, onSincronizar = {}, onDesconectarStrava = {},
             )
         }
