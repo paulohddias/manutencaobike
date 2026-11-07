@@ -88,7 +88,8 @@ class BackupRepository @Inject constructor(
     }
 
     private companion object {
-        val TIPO_ZIP = "application/zip".toMediaType()
+        // O ModSecurity da HostGator responde 406 a corpos "application/zip"; octet-stream passa.
+        val TIPO_ZIP = "application/octet-stream".toMediaType()
     }
 }
 

@@ -57,7 +57,7 @@ com a raiz do subdomínio em `/home/USUARIO/api.viavalesistemas.com.br` quanto e
 | POST | `strava/refresh` | sessão | `{"refresh_token": "..."}` → token novo |
 | DELETE | `sessao` | sessão | Encerra a sessão (desconectar) |
 | GET | `backups` | sessão | Lista os backups do usuário |
-| POST | `backups` | sessão | Corpo = `.zip` (`Content-Type: application/zip`) |
+| POST | `backups` | sessão | Corpo = `.zip` com `Content-Type: application/octet-stream` (o ModSecurity da HostGator bloqueia `application/zip` com 406) |
 | GET | `backups/{id}` | sessão | Download do `.zip` |
 | DELETE | `conta` | sessão | Apaga backups, sessões e perfil do usuário |
 
