@@ -47,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +54,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.viavalesistemas.manutencaobike.data.backup.BackupRemoto
+import br.com.viavalesistemas.manutencaobike.ui.componentes.BotaoConectarStrava
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.Confirmacao
 import br.com.viavalesistemas.manutencaobike.ui.componentes.DialogoConfirmacao
@@ -203,11 +203,7 @@ private fun CartaoDesconectado(onConectar: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onConectar,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.marca.strava, contentColor = Color.White),
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-            ) { Text("Conectar com o Strava") }
+            BotaoConectarStrava(onConectar)
         }
     }
 }

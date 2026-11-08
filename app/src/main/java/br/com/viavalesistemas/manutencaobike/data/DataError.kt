@@ -14,6 +14,11 @@ sealed class DataError(message: String, cause: Throwable? = null) : Exception(me
     class EmUso(cause: Throwable) : DataError("Este item está em uso e não pode ser excluído.", cause)
     class Local(cause: Throwable) : DataError("Não foi possível salvar os dados.", cause)
     class Foto(cause: Throwable) : DataError("Não foi possível carregar a foto.", cause)
+    class LimiteStrava(cause: Throwable) : DataError(
+        "O Manutenção Bike está em aprovação no Strava e ainda não aceita novas contas. " +
+            "Você pode usar o app com bikes cadastradas manualmente enquanto isso.",
+        cause,
+    )
     class Backup(mensagem: String, cause: Throwable? = null) : DataError(mensagem, cause)
 }
 

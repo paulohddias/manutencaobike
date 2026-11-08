@@ -75,6 +75,9 @@ fun FolhaNovidades(versoes: List<NotasVersao>, onFechar: () -> Unit) {
 fun ConteudoNotas(notas: NotasVersao, modifier: Modifier = Modifier) {
     val marca = MaterialTheme.marca
     Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        notas.descricao?.takeIf { it.isNotBlank() }?.let {
+            Text(it, style = MaterialTheme.typography.bodyLarge)
+        }
         SecaoNotas("Novidades", Icons.Default.AutoAwesome, MaterialTheme.colorScheme.primary, notas.novidades)
         SecaoNotas("Correções", Icons.Default.BugReport, marca.atencao, notas.correcoes)
         SecaoNotas("Melhorias técnicas", Icons.Default.Engineering, MaterialTheme.colorScheme.secondary, notas.melhorias)

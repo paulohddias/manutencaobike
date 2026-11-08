@@ -27,8 +27,8 @@ android {
         applicationId = "br.com.viavalesistemas.manutencaobike"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -96,11 +96,15 @@ tasks.register("notasPlayStore") {
             ?: throw GradleException("novidades.json não tem a versão $codigo")
         fun secao(titulo: String, chave: String) =
             (notas[chave] as? List<*>).orEmpty().takeIf { it.isNotEmpty() }?.joinToString("\n", "$titulo\n") { "• $it" }
-        val texto = listOfNotNull(
+        val descricao = (notas["descricao"] as? String)?.takeIf { it.isNotBlank() }
+        val completo = listOfNotNull(
+            descricao,
             secao("Novidades", "novidades"),
             secao("Correções", "correcoes"),
             secao("Melhorias", "melhorias"),
         ).joinToString("\n\n")
+        // A Play Store aceita até 500 caracteres; a descrição (máx. 400) sempre cabe sozinha.
+        val texto = if (completo.length > 500 && descricao != null) descricao else completo
         saida.get().asFile.apply { parentFile.mkdirs(); writeText(texto, Charsets.UTF_8) }
         println(texto)
         println("\n${texto.length}/500 caracteres -> ${saida.get().asFile}")

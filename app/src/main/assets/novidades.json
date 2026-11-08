@@ -1,8 +1,37 @@
 [
   {
+    "versao": "1.0.3",
+    "codigo": 3,
+    "data": "2026-11-08",
+    "descricao": "Conexão com o Strava liberada para mais usuários, agora com o botão oficial do Strava e mensagens mais claras quando algo impedir a conexão.",
+    "novidades": [
+      "Botão oficial \"Connect with Strava\" e selo \"Powered by Strava\""
+    ],
+    "correcoes": [
+      "Novos usuários não conseguiam conectar a conta do Strava",
+      "Mensagem clara quando o Strava ainda não aceita novas contas"
+    ],
+    "melhorias": []
+  },
+  {
+    "versao": "1.0.2",
+    "codigo": 2,
+    "data": "2026-11-08",
+    "descricao": "Agora o app mostra o que mudou a cada atualização, e você pode rever o histórico de versões pelo menu.",
+    "novidades": [
+      "Tela \"O que há de novo\" após cada atualização",
+      "Histórico de versões no menu Novidades"
+    ],
+    "correcoes": [],
+    "melhorias": [
+      "App menor e mais rápido com otimização de código"
+    ]
+  },
+  {
     "versao": "1.0.0",
     "codigo": 1,
     "data": "2026-11-08",
+    "descricao": "Primeira versão do Manutenção Bike. Importe suas bikes do Strava e acompanhe a quilometragem automaticamente. Cadastre peças com vida útil em km, registre revisões com lembretes por km ou tempo e receba avisos quando for hora da manutenção. Controle os gastos de cada bike, adicione fotos e mantenha seus dados seguros com backup na nuvem.",
     "novidades": [
       "Importe suas bikes e a quilometragem do Strava",
       "Peças com vida útil em km e aviso na hora de trocar",

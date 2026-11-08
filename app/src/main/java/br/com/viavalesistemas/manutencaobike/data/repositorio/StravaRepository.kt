@@ -39,6 +39,8 @@ class StravaRepository @Inject constructor(
 
     suspend fun conectar(codigo: String): Result<Unit> = comTratamentoDeErros {
         tokenStore.salvarConexao(vvsApi.conectarStrava(CodigoDto(codigo)))
+    }.recoverCatching { erro ->
+        throw if (erro is DataError.Servidor && erro.codigo == 403) DataError.LimiteStrava(erro) else erro
     }
 
     suspend fun desconectar() {

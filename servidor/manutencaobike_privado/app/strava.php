@@ -23,6 +23,10 @@ function stravaOauthToken(array $campos): array
     if ($corpo === false) {
         throw new ErroHttp(502, 'Não foi possível falar com o Strava.');
     }
+    // App em "modo de um jogador" (ou acima da capacidade aprovada): o Strava recusa novos atletas.
+    if ($status === 403) {
+        throw new ErroHttp(403, 'O app atingiu o limite de atletas conectados no Strava.');
+    }
     if ($status === 400 || $status === 401) {
         throw new ErroHttp(401, 'Autorização do Strava inválida ou expirada. Conecte novamente.');
     }

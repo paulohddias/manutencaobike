@@ -40,8 +40,6 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,6 +82,8 @@ import br.com.viavalesistemas.manutencaobike.model.Bike
 import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
 import br.com.viavalesistemas.manutencaobike.ui.componentes.AnelDesgaste
 import br.com.viavalesistemas.manutencaobike.ui.componentes.AvatarBike
+import br.com.viavalesistemas.manutencaobike.ui.componentes.BotaoConectarStrava
+import br.com.viavalesistemas.manutencaobike.ui.componentes.PoweredByStrava
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.LocalSnackbarHostState
 import br.com.viavalesistemas.manutencaobike.ui.componentes.Pilula
@@ -320,12 +320,8 @@ private fun Cabecalho(
         Spacer(Modifier.height(16.dp))
         Box(Modifier.padding(end = 12.dp)) {
             when {
-                uiState.stravaConectado -> Pilula("● Strava conectado", marca.strava)
-                uiState.stravaConfigurado -> Button(
-                    onClick = onConectarStrava,
-                    colors = ButtonDefaults.buttonColors(containerColor = marca.strava, contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text("Conectar com o Strava") }
+                uiState.stravaConectado -> PoweredByStrava(sobreFundoEscuro = true)
+                uiState.stravaConfigurado -> BotaoConectarStrava(onConectarStrava)
                 else -> Text(
                     "Para importar do Strava, preencha strava.clientId no local.properties.",
                     style = MaterialTheme.typography.bodySmall,
