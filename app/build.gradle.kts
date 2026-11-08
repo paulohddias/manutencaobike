@@ -9,6 +9,12 @@ plugins {
     alias(libs.plugins.room)
 }
 
+// Assinatura de upload da Play Store (keystore.properties fica fora do Git).
+val assinatura = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 android {
     namespace = "br.com.viavalesistemas.manutencaobike"
     compileSdk {
@@ -22,7 +28,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -40,11 +46,23 @@ android {
         )
     }
 
+    signingConfigs {
+        if (assinatura.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = file(assinatura.getProperty("storeFile"))
+                storePassword = assinatura.getProperty("storePassword")
+                keyAlias = assinatura.getProperty("keyAlias")
+                keyPassword = assinatura.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
             }
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {
@@ -61,6 +79,33 @@ android {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+// ./gradlew :app:notasPlayStore -> texto de "O que há de novo" da Play Store para a versão atual.
+tasks.register("notasPlayStore") {
+    description = "Gera as notas da Play Store a partir de src/main/assets/novidades.json."
+    val entrada = file("src/main/assets/novidades.json")
+    val saida = layout.buildDirectory.file("notas-play-store/pt-BR.txt")
+    val codigo = android.defaultConfig.versionCode
+    inputs.file(entrada)
+    outputs.file(saida)
+    doLast {
+        @Suppress("UNCHECKED_CAST")
+        val versoes = groovy.json.JsonSlurper().parse(entrada, "UTF-8") as List<Map<String, Any?>>
+        val notas = versoes.firstOrNull { (it["codigo"] as Number).toInt() == codigo }
+            ?: throw GradleException("novidades.json não tem a versão $codigo")
+        fun secao(titulo: String, chave: String) =
+            (notas[chave] as? List<*>).orEmpty().takeIf { it.isNotEmpty() }?.joinToString("\n", "$titulo\n") { "• $it" }
+        val texto = listOfNotNull(
+            secao("Novidades", "novidades"),
+            secao("Correções", "correcoes"),
+            secao("Melhorias", "melhorias"),
+        ).joinToString("\n\n")
+        saida.get().asFile.apply { parentFile.mkdirs(); writeText(texto, Charsets.UTF_8) }
+        println(texto)
+        println("\n${texto.length}/500 caracteres -> ${saida.get().asFile}")
+        if (texto.length > 500) logger.warn("A Play Store aceita até 500 caracteres; resuma as notas desta versão.")
+    }
 }
 
 dependencies {

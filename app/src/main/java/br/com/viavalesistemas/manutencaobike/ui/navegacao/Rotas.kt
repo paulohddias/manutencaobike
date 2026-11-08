@@ -24,3 +24,6 @@ data object RotaCatalogo
 
 @Serializable
 data object RotaBackup
+
+@Serializable
+data object RotaNovidades

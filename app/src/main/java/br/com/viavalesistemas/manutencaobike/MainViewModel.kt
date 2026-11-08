@@ -3,10 +3,14 @@ package br.com.viavalesistemas.manutencaobike
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.viavalesistemas.manutencaobike.data.novidades.NovidadesRepository
 import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
+import br.com.viavalesistemas.manutencaobike.model.NotasVersao
 import br.com.viavalesistemas.manutencaobike.ui.mensagemParaUsuario
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +18,21 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val stravaRepository: StravaRepository,
+    private val novidadesRepository: NovidadesRepository,
 ) : ViewModel() {
+
+    private val _novidades = MutableStateFlow<List<NotasVersao>>(emptyList())
+    /** Notas das versões instaladas desde a última vez que o usuário abriu o app; vazio = nada a mostrar. */
+    val novidades = _novidades.asStateFlow()
+
+    init {
+        viewModelScope.launch { _novidades.value = novidadesRepository.pendentes() }
+    }
+
+    fun onNovidadesVistas() {
+        _novidades.value = emptyList()
+        viewModelScope.launch { novidadesRepository.marcarVistas() }
+    }
 
     private val _mensagens = Channel<String>(Channel.BUFFERED)
     val mensagens = _mensagens.receiveAsFlow()

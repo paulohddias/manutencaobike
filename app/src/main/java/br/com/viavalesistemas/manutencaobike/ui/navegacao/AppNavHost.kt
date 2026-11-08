@@ -14,6 +14,7 @@ import br.com.viavalesistemas.manutencaobike.ui.bikes.BikesScreen
 import br.com.viavalesistemas.manutencaobike.ui.catalogo.CatalogoScreen
 import br.com.viavalesistemas.manutencaobike.ui.componentes.ColetarEfeitos
 import br.com.viavalesistemas.manutencaobike.ui.componentes.LocalSnackbarHostState
+import br.com.viavalesistemas.manutencaobike.ui.novidades.NovidadesScreen
 import br.com.viavalesistemas.manutencaobike.ui.pecaform.PecaFormScreen
 import br.com.viavalesistemas.manutencaobike.ui.servicoform.ServicoFormScreen
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +35,7 @@ fun AppNavHost(mensagensGlobais: Flow<String>) {
                     onAdicionarBike = { navController.navigate(RotaBikeForm()) },
                     onAbrirCatalogo = { navController.navigate(RotaCatalogo) },
                     onAbrirBackup = { navController.navigate(RotaBackup) },
+                    onAbrirNovidades = { navController.navigate(RotaNovidades) },
                 )
             }
             composable<RotaBikeForm> { BikeFormScreen(onVoltar = voltar) }
@@ -49,6 +51,7 @@ fun AppNavHost(mensagensGlobais: Flow<String>) {
             composable<RotaServicoForm> { ServicoFormScreen(onVoltar = voltar) }
             composable<RotaCatalogo> { CatalogoScreen(onVoltar = voltar) }
             composable<RotaBackup> { BackupScreen(onVoltar = voltar) }
+            composable<RotaNovidades> { NovidadesScreen(onVoltar = voltar) }
         }
     }
 }

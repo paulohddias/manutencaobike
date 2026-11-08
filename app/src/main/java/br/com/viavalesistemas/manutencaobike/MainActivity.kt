@@ -9,7 +9,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.viavalesistemas.manutencaobike.ui.navegacao.AppNavHost
+import br.com.viavalesistemas.manutencaobike.ui.novidades.FolhaNovidades
 import br.com.viavalesistemas.manutencaobike.ui.theme.ManutencaobikeTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -27,6 +30,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ManutencaobikeTheme {
                 AppNavHost(mensagensGlobais = viewModel.mensagens)
+                val novidades by viewModel.novidades.collectAsStateWithLifecycle()
+                if (novidades.isNotEmpty()) FolhaNovidades(novidades, onFechar = viewModel::onNovidadesVistas)
             }
         }
     }

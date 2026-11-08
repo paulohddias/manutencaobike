@@ -1,0 +1,20 @@
+[
+  {
+    "versao": "1.0.0",
+    "codigo": 1,
+    "data": "2026-11-08",
+    "novidades": [
+      "Importe suas bikes e a quilometragem do Strava",
+      "Peças com vida útil em km e aviso na hora de trocar",
+      "Revisões e serviços com lembrete por km ou tempo",
+      "Gastos com peças e serviços por bike",
+      "Foto da bike pela galeria ou câmera",
+      "Bikes ativas e inativas",
+      "Backup na nuvem e restauração em outro celular"
+    ],
+    "correcoes": [],
+    "melhorias": [
+      "Sincronização diária com o Strava em segundo plano"
+    ]
+  }
+]
