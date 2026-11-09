@@ -12,13 +12,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 
 @Composable
 fun DialogoAtualizacao(onAtualizar: () -> Unit, onDepois: () -> Unit) {
     val context = LocalContext.current
+    // Só fecha pelos botões: tocar fora ou voltar não pode sumir com o aviso sem uma escolha.
     AlertDialog(
-        onDismissRequest = onDepois,
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         icon = { Icon(Icons.Default.SystemUpdate, contentDescription = null) },
         title = { Text("Atualização disponível") },
         text = { Text("Uma nova versão do Manutenção Bike está disponível na Play Store, com melhorias e correções.") },
