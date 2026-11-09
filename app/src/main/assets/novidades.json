@@ -1,5 +1,19 @@
 [
   {
+    "versao": "1.0.4",
+    "codigo": 4,
+    "data": "2026-11-09",
+    "descricao": "Tela da bike mais fácil de ler sobre a foto e aviso de atualização mais claro.",
+    "novidades": [
+      "Selo \"Powered by Strava\" na tela da bike sincronizada"
+    ],
+    "correcoes": [
+      "Texto e km ficavam difíceis de ler sobre fotos claras da bike",
+      "O aviso de nova versão fechava ao tocar fora dele, sem escolher uma opção"
+    ],
+    "melhorias": []
+  },
+  {
     "versao": "1.0.3",
     "codigo": 3,
     "data": "2026-11-08",

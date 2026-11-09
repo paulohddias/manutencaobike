@@ -29,6 +29,9 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.ui.layout.ContentScale
 import br.com.viavalesistemas.manutencaobike.ui.componentes.Pilula
+import br.com.viavalesistemas.manutencaobike.ui.componentes.PoweredByStrava
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import coil3.compose.AsyncImage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -220,7 +223,7 @@ private fun CabecalhoBike(bike: Bike, uiState: BikeDetalheUiState) {
                     .background(
                         Brush.verticalGradient(
                             0f to marca.cabecalho.copy(alpha = 0.55f),
-                            0.45f to marca.cabecalhoFim.copy(alpha = 0.35f),
+                            0.45f to marca.cabecalhoFim.copy(alpha = 0.6f),
                             1f to marca.cabecalhoFim.copy(alpha = 0.95f),
                         ),
                     ),
@@ -239,12 +242,18 @@ private fun ConteudoCabecalho(bike: Bike, uiState: BikeDetalheUiState, comFoto: 
             Pilula("Inativa · sem alertas", marca.sobreCabecalhoSuave)
             Spacer(Modifier.height(8.dp))
         }
+        // Sobre a foto, cor suave some em fundos claros: texto em branco pleno e com sombra.
+        val sombra = if (comFoto) Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 2f), blurRadius = 8f) else null
         Text(
             bike.descricao ?: if (bike.doStrava) "Sincronizada com o Strava" else "Cadastro manual",
-            style = MaterialTheme.typography.bodyMedium,
-            color = marca.sobreCabecalhoSuave,
+            style = MaterialTheme.typography.bodyMedium.copy(shadow = sombra),
+            color = if (comFoto) marca.sobreCabecalho else marca.sobreCabecalhoSuave,
         )
-        Text(formatarKm(bike.kmAtual), style = MaterialTheme.typography.displaySmall, color = marca.sobreCabecalho)
+        Text(
+            formatarKm(bike.kmAtual),
+            style = MaterialTheme.typography.displaySmall.copy(shadow = sombra),
+            color = marca.sobreCabecalho,
+        )
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             val pecasVencidas = uiState.pecasInstaladas.count { it.status == StatusDesgaste.TROCAR }
@@ -257,6 +266,11 @@ private fun ConteudoCabecalho(bike: Bike, uiState: BikeDetalheUiState, comFoto: 
                 Modifier.weight(1f),
             )
             NumeroCabecalho("Gasto", formatarMoeda(uiState.custoTotal), marca.sobreCabecalho, Modifier.weight(1.4f))
+        }
+        // Exigência das regras de marca do Strava onde a km vinda de lá aparece.
+        if (bike.doStrava) {
+            Spacer(Modifier.height(14.dp))
+            PoweredByStrava(sobreFundoEscuro = true)
         }
     }
 }
