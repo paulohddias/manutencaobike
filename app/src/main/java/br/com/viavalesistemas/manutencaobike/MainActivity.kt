@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.viavalesistemas.manutencaobike.ui.atualizacao.DialogoAtualizacao
 import br.com.viavalesistemas.manutencaobike.ui.navegacao.AppNavHost
 import br.com.viavalesistemas.manutencaobike.ui.novidades.FolhaNovidades
 import br.com.viavalesistemas.manutencaobike.ui.theme.ManutencaobikeTheme
@@ -31,7 +32,14 @@ class MainActivity : ComponentActivity() {
             ManutencaobikeTheme {
                 AppNavHost(mensagensGlobais = viewModel.mensagens)
                 val novidades by viewModel.novidades.collectAsStateWithLifecycle()
-                if (novidades.isNotEmpty()) FolhaNovidades(novidades, onFechar = viewModel::onNovidadesVistas)
+                val atualizacao by viewModel.atualizacao.collectAsStateWithLifecycle()
+                when {
+                    novidades.isNotEmpty() -> FolhaNovidades(novidades, onFechar = viewModel::onNovidadesVistas)
+                    atualizacao != null -> DialogoAtualizacao(
+                        onAtualizar = viewModel::onAtualizacaoAberta,
+                        onDepois = viewModel::onAtualizacaoDispensada,
+                    )
+                }
             }
         }
     }

@@ -5,7 +5,8 @@
     "data": "2026-11-08",
     "descricao": "Conexão com o Strava liberada para mais usuários, agora com o botão oficial do Strava e mensagens mais claras quando algo impedir a conexão.",
     "novidades": [
-      "Botão oficial \"Connect with Strava\" e selo \"Powered by Strava\""
+      "Botão oficial \"Connect with Strava\" e selo \"Powered by Strava\"",
+      "Aviso dentro do app quando houver uma nova versão na Play Store"
     ],
     "correcoes": [
       "Novos usuários não conseguiam conectar a conta do Strava",

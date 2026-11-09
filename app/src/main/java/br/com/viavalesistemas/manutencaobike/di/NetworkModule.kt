@@ -1,6 +1,8 @@
 package br.com.viavalesistemas.manutencaobike.di
 
 import br.com.viavalesistemas.manutencaobike.BuildConfig
+import br.com.viavalesistemas.manutencaobike.data.atualizacao.AtualizacaoRepository
+import br.com.viavalesistemas.manutencaobike.data.atualizacao.VersaoApi
 import br.com.viavalesistemas.manutencaobike.data.servidor.SessaoInterceptor
 import br.com.viavalesistemas.manutencaobike.data.servidor.VvsApi
 import br.com.viavalesistemas.manutencaobike.data.strava.StravaApi
@@ -74,6 +76,12 @@ object NetworkModule {
             .build()
         return retrofit(BuildConfig.API_URL, cliente, json).create()
     }
+
+    // Cliente sem interceptores: o token de sessão do nosso servidor não pode ir para outro domínio.
+    @Provides
+    @Singleton
+    fun versaoApi(@StravaAuthClient client: OkHttpClient, json: Json): VersaoApi =
+        retrofit(AtualizacaoRepository.URL_BASE, client, json).create()
 
     @Provides
     @Singleton

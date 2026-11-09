@@ -3,6 +3,7 @@ package br.com.viavalesistemas.manutencaobike
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.viavalesistemas.manutencaobike.data.atualizacao.AtualizacaoRepository
 import br.com.viavalesistemas.manutencaobike.data.novidades.NovidadesRepository
 import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
 import br.com.viavalesistemas.manutencaobike.model.NotasVersao
@@ -19,7 +20,12 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val stravaRepository: StravaRepository,
     private val novidadesRepository: NovidadesRepository,
+    private val atualizacaoRepository: AtualizacaoRepository,
 ) : ViewModel() {
+
+    private val _atualizacao = MutableStateFlow<Int?>(null)
+    /** versionCode novo publicado no cadastro de versões da VVS; null = nada a avisar. */
+    val atualizacao = _atualizacao.asStateFlow()
 
     private val _novidades = MutableStateFlow<List<NotasVersao>>(emptyList())
     /** Notas das versões instaladas desde a última vez que o usuário abriu o app; vazio = nada a mostrar. */
@@ -27,6 +33,18 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { _novidades.value = novidadesRepository.pendentes() }
+        viewModelScope.launch { _atualizacao.value = atualizacaoRepository.versaoDisponivel() }
+    }
+
+    fun onAtualizacaoDispensada() {
+        val versao = _atualizacao.value ?: return
+        _atualizacao.value = null
+        viewModelScope.launch { atualizacaoRepository.dispensar(versao) }
+    }
+
+    /** Foi para a Play Store: volta a avisar na próxima abertura se ainda não atualizou. */
+    fun onAtualizacaoAberta() {
+        _atualizacao.value = null
     }
 
     fun onNovidadesVistas() {
