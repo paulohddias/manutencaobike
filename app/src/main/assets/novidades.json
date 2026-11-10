@@ -1,5 +1,19 @@
 [
   {
+    "versao": "1.0.5",
+    "codigo": 5,
+    "data": "2026-11-10",
+    "descricao": "Agora você pode excluir uma bike de vez, inclusive as importadas do Strava, ou continuar só inativando.",
+    "novidades": [
+      "Excluir bike definitivamente, com aviso de que não dá para recuperar"
+    ],
+    "correcoes": [],
+    "melhorias": [
+      "Bikes do Strava excluídas não voltam na próxima sincronização",
+      "Para importar de novo uma bike do Strava excluída, basta desconectar e conectar o Strava"
+    ]
+  },
+  {
     "versao": "1.0.4",
     "codigo": 4,
     "data": "2026-11-09",

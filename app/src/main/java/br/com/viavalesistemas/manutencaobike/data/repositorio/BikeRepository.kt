@@ -52,9 +52,9 @@ class BikeRepository @Inject constructor(
         comTratamentoDeErros { dao.definirInativa(id, !ativa) }
 
     suspend fun excluir(id: Long): Result<Unit> = comTratamentoDeErros {
-        val foto = dao.buscar(id)?.foto
-        dao.excluir(id)
-        foto?.let { descartarFoto(it) }
+        val bike = dao.buscar(id) ?: return@comTratamentoDeErros
+        dao.excluirDefinitivo(bike)
+        bike.foto?.let { descartarFoto(it) }
     }
 
     // Fora do comTratamentoDeErros: aqui um IOException é imagem ilegível, não falta de internet.

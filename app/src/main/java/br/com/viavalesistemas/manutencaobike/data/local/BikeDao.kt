@@ -2,7 +2,9 @@ package br.com.viavalesistemas.manutencaobike.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -37,4 +39,20 @@ interface BikeDao {
 
     @Query("DELETE FROM bikes WHERE id = :id")
     suspend fun excluir(id: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun ignorarStrava(ignorada: StravaIgnoradaEntity)
+
+    @Query("SELECT gearId FROM strava_ignoradas")
+    suspend fun gearsIgnorados(): List<String>
+
+    @Query("DELETE FROM strava_ignoradas")
+    suspend fun limparIgnorados()
+
+    // Peças e serviços saem junto pelo CASCADE das chaves estrangeiras.
+    @Transaction
+    suspend fun excluirDefinitivo(bike: BikeEntity) {
+        bike.stravaGearId?.let { ignorarStrava(StravaIgnoradaEntity(it)) }
+        excluir(bike.id)
+    }
 }

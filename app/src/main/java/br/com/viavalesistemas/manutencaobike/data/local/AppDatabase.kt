@@ -12,10 +12,14 @@ import androidx.room.TypeConverters
         TipoServicoEntity::class,
         PecaEntity::class,
         ServicoEntity::class,
+        StravaIgnoradaEntity::class,
     ],
     version = AppDatabase.VERSAO,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2, spec = Migracao1Para2::class)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2, spec = Migracao1Para2::class),
+        AutoMigration(from = 2, to = 3),
+    ],
 )
 @TypeConverters(Conversores::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -26,6 +30,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val NOME = "manutencao_bike.db"
-        const val VERSAO = 2
+        const val VERSAO = 3
     }
 }

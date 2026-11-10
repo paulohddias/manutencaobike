@@ -143,8 +143,16 @@ private fun BikeDetalheContent(
                         onExcluir = {
                             confirmacao = Confirmacao(
                                 titulo = "Excluir ${bike.nome}?",
-                                texto = "Todas as peças e serviços desta bike também serão apagados.",
-                                acao = "Excluir",
+                                texto = "Esta ação não pode ser desfeita. A bike, suas peças, serviços, gastos e foto " +
+                                    "serão apagados e não será possível recuperá-los." +
+                                    (if (bike.doStrava) {
+                                        " Ela também deixará de ser importada do Strava. Para voltar a importá-la " +
+                                            "(sem o histórico), desconecte e conecte o Strava novamente."
+                                    } else {
+                                        ""
+                                    }) +
+                                    "\n\nSe quiser apenas parar os alertas, use \"Inativar bike\".",
+                                acao = "Excluir definitivamente",
                                 onConfirmar = actions::onExcluirBike,
                             )
                         },
@@ -304,7 +312,7 @@ private fun MenuBike(
             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
             onClick = { aberto = false; onEditar() },
         )
-        // Bikes do Strava recebem o km na sincronização e são removidas por lá.
+        // Bikes do Strava recebem o km na sincronização.
         if (!bike.doStrava) {
             DropdownMenuItem(
                 text = { Text("Atualizar km") },
@@ -319,13 +327,11 @@ private fun MenuBike(
             },
             onClick = { aberto = false; onAlternarAtiva() },
         )
-        if (!bike.doStrava) {
-            DropdownMenuItem(
-                text = { Text("Excluir bike") },
-                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
-                onClick = { aberto = false; onExcluir() },
-            )
-        }
+        DropdownMenuItem(
+            text = { Text("Excluir bike", color = MaterialTheme.colorScheme.error) },
+            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            onClick = { aberto = false; onExcluir() },
+        )
     }
 }
 

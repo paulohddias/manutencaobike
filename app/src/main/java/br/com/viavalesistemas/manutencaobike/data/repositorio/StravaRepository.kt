@@ -39,6 +39,8 @@ class StravaRepository @Inject constructor(
 
     suspend fun conectar(codigo: String): Result<Unit> = comTratamentoDeErros {
         tokenStore.salvarConexao(vvsApi.conectarStrava(CodigoDto(codigo)))
+        // Conectar de novo é o caminho para recuperar bikes do Strava excluídas por engano.
+        bikeDao.limparIgnorados()
     }.recoverCatching { erro ->
         throw if (erro is DataError.Servidor && erro.codigo == 403) DataError.LimiteStrava(erro) else erro
     }
@@ -55,10 +57,12 @@ class StravaRepository @Inject constructor(
     /** Importa/atualiza as bikes do Strava e devolve quantas foram sincronizadas. */
     suspend fun sincronizarBikes(): Result<Int> = comTratamentoDeErros {
         val atleta = api.atleta()
-        atleta.bikes.forEach { resumo ->
+        val ignorados = bikeDao.gearsIgnorados().toSet()
+        val bikes = atleta.bikes.filterNot { it.id in ignorados }
+        bikes.forEach { resumo ->
             val detalhe = api.equipamento(resumo.id)
             val km = resumo.distance / METROS_POR_KM
-            val nome = detalhe.name ?: resumo.name ?: "Bike"
+            val nome = (detalhe.name ?: resumo.name)?.trim()?.ifEmpty { null } ?: "Bike"
             val aposentada = resumo.retired || detalhe.retired
             val existente = bikeDao.buscarPorStrava(resumo.id)
             if (existente == null) {
@@ -84,7 +88,7 @@ class StravaRepository @Inject constructor(
                 )
             }
         }
-        atleta.bikes.size
+        bikes.size
     }.onFailure { if (it is DataError.NaoConectado) tokenStore.limpar() }
 
     companion object {
