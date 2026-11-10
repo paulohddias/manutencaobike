@@ -146,8 +146,8 @@ private fun BikeDetalheContent(
                                 texto = "Esta ação não pode ser desfeita. A bike, suas peças, serviços, gastos e foto " +
                                     "serão apagados e não será possível recuperá-los." +
                                     (if (bike.doStrava) {
-                                        " Ela também deixará de ser importada do Strava. Para voltar a importá-la " +
-                                            "(sem o histórico), desconecte e conecte o Strava novamente."
+                                        " Ela também deixará de ser importada do Strava. Ao conectar o Strava novamente, " +
+                                            "o app pergunta se você quer trazê-la de volta (sem o histórico)."
                                     } else {
                                         ""
                                     }) +

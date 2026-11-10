@@ -10,7 +10,7 @@
     "correcoes": [],
     "melhorias": [
       "Bikes do Strava excluídas não voltam na próxima sincronização",
-      "Para importar de novo uma bike do Strava excluída, basta desconectar e conectar o Strava"
+      "Ao conectar o Strava de novo, o app pergunta se você quer trazer de volta as bikes excluídas"
     ]
   },
   {

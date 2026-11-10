@@ -15,6 +15,11 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class BikeExcluida(val gearId: String, val nome: String)
+
+/** [excluidas]: bikes que ainda existem no Strava, mas o usuário excluiu no app. */
+data class ResultadoSincronizacao(val importadas: Int, val excluidas: List<BikeExcluida>)
+
 @Singleton
 class StravaRepository @Inject constructor(
     private val api: StravaApi,
@@ -39,8 +44,6 @@ class StravaRepository @Inject constructor(
 
     suspend fun conectar(codigo: String): Result<Unit> = comTratamentoDeErros {
         tokenStore.salvarConexao(vvsApi.conectarStrava(CodigoDto(codigo)))
-        // Conectar de novo é o caminho para recuperar bikes do Strava excluídas por engano.
-        bikeDao.limparIgnorados()
     }.recoverCatching { erro ->
         throw if (erro is DataError.Servidor && erro.codigo == 403) DataError.LimiteStrava(erro) else erro
     }
@@ -54,11 +57,11 @@ class StravaRepository @Inject constructor(
         tokenStore.limpar()
     }
 
-    /** Importa/atualiza as bikes do Strava e devolve quantas foram sincronizadas. */
-    suspend fun sincronizarBikes(): Result<Int> = comTratamentoDeErros {
+    /** Importa/atualiza as bikes do Strava, pulando as que o usuário excluiu no app. */
+    suspend fun sincronizarBikes(): Result<ResultadoSincronizacao> = comTratamentoDeErros {
         val atleta = api.atleta()
         val ignorados = bikeDao.gearsIgnorados().toSet()
-        val bikes = atleta.bikes.filterNot { it.id in ignorados }
+        val (excluidas, bikes) = atleta.bikes.partition { it.id in ignorados }
         bikes.forEach { resumo ->
             val detalhe = api.equipamento(resumo.id)
             val km = resumo.distance / METROS_POR_KM
@@ -88,8 +91,17 @@ class StravaRepository @Inject constructor(
                 )
             }
         }
-        bikes.size
+        ResultadoSincronizacao(
+            importadas = bikes.size,
+            excluidas = excluidas.map { BikeExcluida(it.id, it.name?.trim()?.ifEmpty { null } ?: "Bike") },
+        )
     }.onFailure { if (it is DataError.NaoConectado) tokenStore.limpar() }
+
+    /** Tira as bikes da lista de excluídas e importa de novo, agora sem o histórico antigo. */
+    suspend fun restaurarExcluidas(gearIds: List<String>): Result<Int> {
+        comTratamentoDeErros { bikeDao.restaurarIgnoradas(gearIds) }.onFailure { return Result.failure(it) }
+        return sincronizarBikes().map { gearIds.size }
+    }
 
     companion object {
         const val ESQUEMA_CALLBACK = "manutencaobike"

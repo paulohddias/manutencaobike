@@ -12,6 +12,7 @@ import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.viavalesistemas.manutencaobike.ui.atualizacao.DialogoAtualizacao
+import br.com.viavalesistemas.manutencaobike.ui.bikes.DialogoBikesExcluidas
 import br.com.viavalesistemas.manutencaobike.ui.navegacao.AppNavHost
 import br.com.viavalesistemas.manutencaobike.ui.novidades.FolhaNovidades
 import br.com.viavalesistemas.manutencaobike.ui.theme.ManutencaobikeTheme
@@ -33,7 +34,14 @@ class MainActivity : ComponentActivity() {
                 AppNavHost(mensagensGlobais = viewModel.mensagens)
                 val novidades by viewModel.novidades.collectAsStateWithLifecycle()
                 val atualizacao by viewModel.atualizacao.collectAsStateWithLifecycle()
+                val bikesExcluidas by viewModel.bikesExcluidas.collectAsStateWithLifecycle()
                 when {
+                    // Primeiro: é a resposta direta ao que o usuário acabou de fazer (conectar o Strava).
+                    bikesExcluidas.isNotEmpty() -> DialogoBikesExcluidas(
+                        bikes = bikesExcluidas,
+                        onTrazerDeVolta = viewModel::onRestaurarBikes,
+                        onManterExcluidas = viewModel::onManterExcluidas,
+                    )
                     novidades.isNotEmpty() -> FolhaNovidades(novidades, onFechar = viewModel::onNovidadesVistas)
                     atualizacao != null -> DialogoAtualizacao(
                         onAtualizar = viewModel::onAtualizacaoAberta,

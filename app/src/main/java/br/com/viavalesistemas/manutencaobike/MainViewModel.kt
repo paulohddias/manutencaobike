@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.viavalesistemas.manutencaobike.data.atualizacao.AtualizacaoRepository
 import br.com.viavalesistemas.manutencaobike.data.novidades.NovidadesRepository
+import br.com.viavalesistemas.manutencaobike.data.repositorio.BikeExcluida
 import br.com.viavalesistemas.manutencaobike.data.repositorio.StravaRepository
 import br.com.viavalesistemas.manutencaobike.model.NotasVersao
 import br.com.viavalesistemas.manutencaobike.ui.mensagemParaUsuario
@@ -71,8 +72,29 @@ class MainViewModel @Inject constructor(
             _mensagens.send("Conectando ao Strava…")
             val resultado = stravaRepository.conectar(codigo).mapCatching { stravaRepository.sincronizarBikes().getOrThrow() }
             resultado
-                .onSuccess { _mensagens.send("Strava conectado: $it bike(s) importada(s).") }
+                .onSuccess {
+                    _mensagens.send("Strava conectado: ${it.importadas} bike(s) importada(s).")
+                    _bikesExcluidas.value = it.excluidas
+                }
                 .onFailure { _mensagens.send(it.mensagemParaUsuario()) }
         }
+    }
+
+    private val _bikesExcluidas = MutableStateFlow<List<BikeExcluida>>(emptyList())
+    /** Bikes que o usuário excluiu no app e ainda existem no Strava: perguntar se quer trazer de volta. */
+    val bikesExcluidas = _bikesExcluidas.asStateFlow()
+
+    fun onRestaurarBikes(gearIds: List<String>) {
+        _bikesExcluidas.value = emptyList()
+        if (gearIds.isEmpty()) return
+        viewModelScope.launch {
+            stravaRepository.restaurarExcluidas(gearIds)
+                .onSuccess { _mensagens.send("$it bike(s) trazida(s) de volta do Strava.") }
+                .onFailure { _mensagens.send(it.mensagemParaUsuario()) }
+        }
+    }
+
+    fun onManterExcluidas() {
+        _bikesExcluidas.value = emptyList()
     }
 }

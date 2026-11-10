@@ -145,7 +145,7 @@ class BikesViewModel @Inject constructor(
             try {
                 // Na automática só o indicador no topo: sem internet no meio da trilha não é erro para avisar.
                 stravaRepository.sincronizarBikes()
-                    .onSuccess { if (!automatica) _efeitos.send(BikesEfeito.Mensagem("$it bike(s) atualizada(s) do Strava.")) }
+                    .onSuccess { if (!automatica) _efeitos.send(BikesEfeito.Mensagem("${it.importadas} bike(s) atualizada(s) do Strava.")) }
                     .onFailure { if (!automatica) _efeitos.send(BikesEfeito.Mensagem(it.mensagemParaUsuario())) }
             } finally {
                 sincronizando.value = false

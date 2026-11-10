@@ -46,8 +46,8 @@ interface BikeDao {
     @Query("SELECT gearId FROM strava_ignoradas")
     suspend fun gearsIgnorados(): List<String>
 
-    @Query("DELETE FROM strava_ignoradas")
-    suspend fun limparIgnorados()
+    @Query("DELETE FROM strava_ignoradas WHERE gearId IN (:gearIds)")
+    suspend fun restaurarIgnoradas(gearIds: List<String>)
 
     // Peças e serviços saem junto pelo CASCADE das chaves estrangeiras.
     @Transaction
