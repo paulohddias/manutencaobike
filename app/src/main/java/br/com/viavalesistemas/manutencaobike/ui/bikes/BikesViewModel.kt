@@ -1,5 +1,6 @@
 package br.com.viavalesistemas.manutencaobike.ui.bikes
 
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.viavalesistemas.manutencaobike.data.repositorio.BikeRepository
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -120,18 +122,39 @@ class BikesViewModel @Inject constructor(
         _efeitos.trySend(BikesEfeito.AbrirNavegador(stravaRepository.urlAutorizacao()))
     }
 
-    fun onSincronizar() {
+    fun onSincronizar() = sincronizar(automatica = false)
+
+    // Chamado sempre que a tela inicial volta ao primeiro plano (abrir o app, voltar do detalhe).
+    // O intervalo mínimo poupa o limite de requisições do Strava, que é por app e não por usuário.
+    fun onTelaVisivel() {
+        val agora = SystemClock.elapsedRealtime()
+        if (ultimaAutomatica != 0L && agora - ultimaAutomatica < INTERVALO_MINIMO_MS) return
+        viewModelScope.launch {
+            if (!stravaRepository.conectado.first()) return@launch
+            ultimaAutomatica = agora
+            sincronizar(automatica = true)
+        }
+    }
+
+    private var ultimaAutomatica = 0L
+
+    private fun sincronizar(automatica: Boolean) {
         if (sincronizando.value) return
         viewModelScope.launch {
             sincronizando.value = true
             try {
+                // Na automática só o indicador no topo: sem internet no meio da trilha não é erro para avisar.
                 stravaRepository.sincronizarBikes()
-                    .onSuccess { _efeitos.send(BikesEfeito.Mensagem("$it bike(s) atualizada(s) do Strava.")) }
-                    .onFailure { _efeitos.send(BikesEfeito.Mensagem(it.mensagemParaUsuario())) }
+                    .onSuccess { if (!automatica) _efeitos.send(BikesEfeito.Mensagem("$it bike(s) atualizada(s) do Strava.")) }
+                    .onFailure { if (!automatica) _efeitos.send(BikesEfeito.Mensagem(it.mensagemParaUsuario())) }
             } finally {
                 sincronizando.value = false
             }
         }
+    }
+
+    private companion object {
+        const val INTERVALO_MINIMO_MS = 5 * 60 * 1000L
     }
 
     fun onDesconectarStrava() {

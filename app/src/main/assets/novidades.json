@@ -3,8 +3,9 @@
     "versao": "1.0.4",
     "codigo": 4,
     "data": "2026-11-09",
-    "descricao": "Tela da bike mais fácil de ler sobre a foto e aviso de atualização mais claro.",
+    "descricao": "A quilometragem do Strava agora atualiza sozinha ao abrir o app, e a tela da bike ficou mais fácil de ler sobre a foto.",
     "novidades": [
+      "Km do Strava atualizada automaticamente ao abrir o app",
       "Selo \"Powered by Strava\" na tela da bike sincronizada"
     ],
     "correcoes": [

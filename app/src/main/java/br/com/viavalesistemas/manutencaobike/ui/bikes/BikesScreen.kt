@@ -76,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.viavalesistemas.manutencaobike.R
 import br.com.viavalesistemas.manutencaobike.model.Bike
@@ -116,6 +117,10 @@ fun BikesScreen(
         }
     }
     PedirPermissaoNotificacao()
+    LifecycleStartEffect(Unit) {
+        viewModel.onTelaVisivel()
+        onStopOrDispose {}
+    }
 
     BikesContent(
         uiState = uiState,
