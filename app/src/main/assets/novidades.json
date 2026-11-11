@@ -1,5 +1,16 @@
 [
   {
+    "versao": "1.0.6",
+    "codigo": 6,
+    "data": "2026-11-10",
+    "descricao": "Agora a versão do app aparece na tela inicial, logo abaixo do logo.",
+    "novidades": [
+      "Versão do app exibida abaixo do logo na tela inicial"
+    ],
+    "correcoes": [],
+    "melhorias": []
+  },
+  {
     "versao": "1.0.5",
     "codigo": 5,
     "data": "2026-11-10",

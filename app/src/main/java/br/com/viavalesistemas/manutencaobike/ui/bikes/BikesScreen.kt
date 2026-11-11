@@ -78,6 +78,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.viavalesistemas.manutencaobike.BuildConfig
 import br.com.viavalesistemas.manutencaobike.R
 import br.com.viavalesistemas.manutencaobike.model.Bike
 import br.com.viavalesistemas.manutencaobike.model.StatusDesgaste
@@ -257,11 +258,18 @@ private fun Cabecalho(
             .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(R.drawable.logo_marca),
-                contentDescription = "Logo VVS",
-                modifier = Modifier.size(44.dp),
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(R.drawable.logo_marca),
+                    contentDescription = "Logo VVS",
+                    modifier = Modifier.size(44.dp),
+                )
+                Text(
+                    "v${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = marca.sobreCabecalhoSuave,
+                )
+            }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("Manutenção Bike", style = MaterialTheme.typography.titleLarge, color = marca.sobreCabecalho)
