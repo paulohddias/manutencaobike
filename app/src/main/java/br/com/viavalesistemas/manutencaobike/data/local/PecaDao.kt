@@ -3,6 +3,7 @@ package br.com.viavalesistemas.manutencaobike.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -20,8 +21,14 @@ interface PecaDao {
     @Query("$SELECT_COM_TIPO WHERE p.kmRemocao IS NULL")
     suspend fun listarInstaladas(): List<PecaComTipo>
 
+    @Query("$SELECT_COM_TIPO WHERE p.id = :id")
+    suspend fun buscar(id: Long): PecaComTipo?
+
     @Insert
     suspend fun inserir(peca: PecaEntity): Long
+
+    @Update
+    suspend fun atualizar(peca: PecaEntity)
 
     @Query("UPDATE pecas SET kmRemocao = :km, dataRemocao = :data WHERE id = :id")
     suspend fun marcarRemovida(id: Long, km: Double, data: LocalDate)

@@ -40,7 +40,7 @@ fun ServicoFormScreen(onVoltar: () -> Unit, viewModel: ServicoFormViewModel = hi
     }
 
     Scaffold(
-        topBar = { TopoComVoltar("Registrar serviço", onVoltar) },
+        topBar = { TopoComVoltar(if (uiState.editando) "Editar serviço" else "Registrar serviço", onVoltar) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
@@ -70,7 +70,9 @@ fun ServicoFormScreen(onVoltar: () -> Unit, viewModel: ServicoFormViewModel = hi
                 value = uiState.km,
                 onValueChange = viewModel::onKmChange,
                 label = { Text("Km da bike no serviço *") },
-                supportingText = { Text("Já vem com o km atual; ajuste se o serviço foi feito antes.") },
+                supportingText = {
+                    Text(if (uiState.editando) "Km que a bike tinha no dia do serviço." else "Já vem com o km atual; ajuste se o serviço foi feito antes.")
+                },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),

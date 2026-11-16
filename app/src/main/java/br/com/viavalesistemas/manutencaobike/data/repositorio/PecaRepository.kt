@@ -21,7 +21,11 @@ class PecaRepository @Inject constructor(private val dao: PecaDao) {
 
     suspend fun listarInstaladas(): List<Peca> = dao.listarInstaladas().map(PecaComTipo::toModel)
 
+    suspend fun buscar(id: Long): Peca? = dao.buscar(id)?.toModel()
+
     suspend fun instalar(peca: Peca): Result<Long> = comTratamentoDeErros { dao.inserir(peca.toEntity()) }
+
+    suspend fun atualizar(peca: Peca): Result<Unit> = comTratamentoDeErros { dao.atualizar(peca.toEntity()) }
 
     suspend fun remover(pecaId: Long, kmBike: Double, data: LocalDate): Result<Unit> =
         comTratamentoDeErros { dao.marcarRemovida(pecaId, kmBike, data) }

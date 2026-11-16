@@ -9,6 +9,7 @@ import br.com.viavalesistemas.manutencaobike.data.repositorio.CatalogoRepository
 import br.com.viavalesistemas.manutencaobike.data.repositorio.PecaRepository
 import br.com.viavalesistemas.manutencaobike.model.Peca
 import br.com.viavalesistemas.manutencaobike.model.TipoPeca
+import br.com.viavalesistemas.manutencaobike.ui.centavosParaTexto
 import br.com.viavalesistemas.manutencaobike.ui.lerCentavos
 import br.com.viavalesistemas.manutencaobike.ui.lerInteiro
 import br.com.viavalesistemas.manutencaobike.ui.mensagemParaUsuario
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlin.math.roundToLong
 
 data class PecaFormUiState(
     val tipos: List<TipoPeca> = emptyList(),
@@ -34,7 +36,14 @@ data class PecaFormUiState(
     val custo: String = "",
     val kmAtualBike: Double = 0.0,
     val salvando: Boolean = false,
+    /** Peça sendo editada; null = instalação nova. */
+    val original: Peca? = null,
 ) {
+    val editando: Boolean get() = original != null
+
+    // Peça já removida: os km rodados contam até a remoção, não até o km atual da bike.
+    val kmReferencia: Double get() = original?.kmRemocao ?: kmAtualBike
+
     val custoValido: Boolean get() = custo.isBlank() || lerCentavos(custo) != null
     val podeSalvar: Boolean
         get() = tipoSelecionado != null && (lerInteiro(vidaUtilKm) ?: 0) > 0 && custoValido && !salvando
@@ -66,8 +75,25 @@ class PecaFormViewModel @Inject constructor(
             val tipos = catalogoRepository.observarTiposPeca().first()
             val bike = bikeRepository.observarBike(rota.bikeId).first()
             _uiState.update { it.copy(tipos = tipos, kmAtualBike = bike?.kmAtual ?: 0.0) }
-            tipos.find { it.id == rota.tipoPecaId }?.let(::onTipoChange)
+            val original = if (rota.pecaId != 0L) pecaRepository.buscar(rota.pecaId) else null
+            if (original != null) {
+                carregar(original, tipos)
+            } else {
+                tipos.find { it.id == rota.tipoPecaId }?.let(::onTipoChange)
+            }
         }
+    }
+
+    private fun carregar(peca: Peca, tipos: List<TipoPeca>) = _uiState.update {
+        it.copy(
+            original = peca,
+            tipoSelecionado = tipos.find { tipo -> tipo.id == peca.tipoPecaId },
+            descricao = peca.descricao.orEmpty(),
+            vidaUtilKm = peca.vidaUtilKm.toString(),
+            kmJaRodados = peca.kmRodados(it.kmAtualBike).roundToLong().toString(),
+            dataInstalacao = peca.dataInstalacao,
+            custo = centavosParaTexto(peca.custoCentavos),
+        )
     }
 
     fun onTipoChange(tipo: TipoPeca) = _uiState.update {
@@ -89,19 +115,26 @@ class PecaFormViewModel @Inject constructor(
         if (!estado.podeSalvar) return
         // Registrar "km já rodados" é mais fácil para o usuário do que lembrar o odômetro da bike no dia da instalação.
         val kmJaRodados = lerInteiro(estado.kmJaRodados) ?: 0
+        val original = estado.original
+        // Sem mexer nos km rodados, mantém o km de instalação exato (o campo mostra o valor arredondado).
+        val semMudarKm = original != null && kmJaRodados.toLong() == original.kmRodados(estado.kmAtualBike).roundToLong()
         val peca = Peca(
+            id = original?.id ?: 0,
             bikeId = rota.bikeId,
             tipoPecaId = tipo.id,
             tipoNome = tipo.nome,
             descricao = estado.descricao.trim().ifBlank { null },
-            kmInstalacao = estado.kmAtualBike - kmJaRodados,
+            kmInstalacao = if (semMudarKm) original!!.kmInstalacao else estado.kmReferencia - kmJaRodados,
             vidaUtilKm = lerInteiro(estado.vidaUtilKm)!!,
             dataInstalacao = estado.dataInstalacao,
             custoCentavos = estado.custo.takeIf { it.isNotBlank() }?.let(::lerCentavos),
+            kmRemocao = original?.kmRemocao,
+            dataRemocao = original?.dataRemocao,
         )
         viewModelScope.launch {
             _uiState.update { it.copy(salvando = true) }
-            pecaRepository.instalar(peca)
+            val resultado = if (original != null) pecaRepository.atualizar(peca) else pecaRepository.instalar(peca).map { }
+            resultado
                 .onSuccess { _efeitos.send(PecaFormEfeito.Voltar) }
                 .onFailure {
                     _uiState.update { s -> s.copy(salvando = false) }

@@ -40,7 +40,7 @@ fun PecaFormScreen(onVoltar: () -> Unit, viewModel: PecaFormViewModel = hiltView
     }
 
     Scaffold(
-        topBar = { TopoComVoltar("Instalar peça", onVoltar) },
+        topBar = { TopoComVoltar(if (uiState.editando) "Editar peça" else "Instalar peça", onVoltar) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
@@ -80,8 +80,17 @@ fun PecaFormScreen(onVoltar: () -> Unit, viewModel: PecaFormViewModel = hiltView
             OutlinedTextField(
                 value = uiState.kmJaRodados,
                 onValueChange = viewModel::onKmJaRodadosChange,
-                label = { Text("Km já rodados com esta peça") },
-                supportingText = { Text("0 para peça nova. A bike está com ${formatarKm(uiState.kmAtualBike)}.") },
+                label = { Text(if (uiState.original?.instalada == false) "Km rodados com esta peça" else "Km já rodados com esta peça") },
+                supportingText = {
+                    val original = uiState.original
+                    Text(
+                        when {
+                            original?.instalada == false -> "Até a remoção, com a bike em ${formatarKm(uiState.kmReferencia)}."
+                            original != null -> "A bike está com ${formatarKm(uiState.kmAtualBike)}."
+                            else -> "0 para peça nova. A bike está com ${formatarKm(uiState.kmAtualBike)}."
+                        },
+                    )
+                },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),

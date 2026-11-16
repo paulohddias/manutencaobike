@@ -3,6 +3,7 @@ package br.com.viavalesistemas.manutencaobike.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 private const val SELECT_COM_TIPO =
@@ -19,8 +20,14 @@ interface ServicoDao {
     @Query(SELECT_COM_TIPO)
     suspend fun listarTodos(): List<ServicoComTipo>
 
+    @Query("$SELECT_COM_TIPO WHERE s.id = :id")
+    suspend fun buscar(id: Long): ServicoComTipo?
+
     @Insert
     suspend fun inserir(servico: ServicoEntity): Long
+
+    @Update
+    suspend fun atualizar(servico: ServicoEntity)
 
     @Query("DELETE FROM servicos WHERE id = :id")
     suspend fun excluir(id: Long)

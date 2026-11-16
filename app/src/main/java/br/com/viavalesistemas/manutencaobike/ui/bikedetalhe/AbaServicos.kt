@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +38,7 @@ fun AbaServicos(
     uiState: BikeDetalheUiState,
     actions: BikeDetalheActions,
     kmAtual: Double,
+    onEditar: (servicoId: Long) -> Unit,
     onPedirConfirmacao: (Confirmacao) -> Unit,
 ) {
     LazyColumn(
@@ -55,6 +57,7 @@ fun AbaServicos(
         items(uiState.servicos, key = { "servico-${it.id}" }) { servico ->
             ItemServico(
                 servico = servico,
+                onEditar = { onEditar(servico.id) },
                 onExcluir = {
                     onPedirConfirmacao(
                         Confirmacao(
@@ -112,13 +115,13 @@ private fun textoProximo(situacao: SituacaoServico, kmAtual: Double): String {
 }
 
 @Composable
-private fun ItemServico(servico: Servico, onExcluir: () -> Unit) {
+private fun ItemServico(servico: Servico, onEditar: () -> Unit, onExcluir: () -> Unit) {
     val detalhes = buildList {
         add(formatarData(servico.data))
         add(formatarKm(servico.km))
         servico.custoCentavos?.let { add(formatarMoeda(it)) }
     }.joinToString(" · ")
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    ElevatedCard(onClick = onEditar, modifier = Modifier.fillMaxWidth()) {
         ListItem(
             headlineContent = { Text(servico.tipoNome) },
             supportingContent = {
@@ -128,7 +131,10 @@ private fun ItemServico(servico: Servico, onExcluir: () -> Unit) {
                 }
             },
             trailingContent = {
-                IconButton(onClick = onExcluir) { Icon(Icons.Default.Delete, contentDescription = "Excluir serviço") }
+                Row {
+                    IconButton(onClick = onEditar) { Icon(Icons.Default.Edit, contentDescription = "Editar serviço") }
+                    IconButton(onClick = onExcluir) { Icon(Icons.Default.Delete, contentDescription = "Excluir serviço") }
+                }
             },
         )
     }

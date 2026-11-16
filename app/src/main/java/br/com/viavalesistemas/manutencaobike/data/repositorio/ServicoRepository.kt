@@ -21,7 +21,11 @@ class ServicoRepository @Inject constructor(private val dao: ServicoDao) {
 
     suspend fun listarTodos(): List<Servico> = dao.listarTodos().map(ServicoComTipo::toModel)
 
+    suspend fun buscar(id: Long): Servico? = dao.buscar(id)?.toModel()
+
     suspend fun registrar(servico: Servico): Result<Long> = comTratamentoDeErros { dao.inserir(servico.toEntity()) }
+
+    suspend fun atualizar(servico: Servico): Result<Unit> = comTratamentoDeErros { dao.atualizar(servico.toEntity()) }
 
     suspend fun excluir(servicoId: Long): Result<Unit> = comTratamentoDeErros { dao.excluir(servicoId) }
 }

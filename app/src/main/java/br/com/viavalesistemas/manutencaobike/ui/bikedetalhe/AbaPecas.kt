@@ -42,6 +42,7 @@ import kotlin.math.abs
 fun AbaPecas(
     pecas: List<DesgastePeca>,
     actions: BikeDetalheActions,
+    onEditar: (pecaId: Long) -> Unit,
     onPedirConfirmacao: (Confirmacao) -> Unit,
 ) {
     if (pecas.isEmpty()) {
@@ -66,6 +67,7 @@ fun AbaPecas(
                         ),
                     )
                 },
+                onEditar = { onEditar(desgaste.peca.id) },
                 onRemover = { actions.onRemoverPeca(desgaste.peca) },
                 onExcluir = {
                     onPedirConfirmacao(
@@ -83,11 +85,17 @@ fun AbaPecas(
 }
 
 @Composable
-private fun CartaoPeca(desgaste: DesgastePeca, onTrocar: () -> Unit, onRemover: () -> Unit, onExcluir: () -> Unit) {
+private fun CartaoPeca(
+    desgaste: DesgastePeca,
+    onTrocar: () -> Unit,
+    onEditar: () -> Unit,
+    onRemover: () -> Unit,
+    onExcluir: () -> Unit,
+) {
     val peca = desgaste.peca
     var menuAberto by remember { mutableStateOf(false) }
 
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    ElevatedCard(onClick = onEditar, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -101,6 +109,7 @@ private fun CartaoPeca(desgaste: DesgastePeca, onTrocar: () -> Unit, onRemover: 
                     Icon(Icons.Default.MoreVert, contentDescription = "Opções da peça")
                 }
                 DropdownMenu(expanded = menuAberto, onDismissRequest = { menuAberto = false }) {
+                    DropdownMenuItem(text = { Text("Editar") }, onClick = { menuAberto = false; onEditar() })
                     DropdownMenuItem(text = { Text("Remover sem substituir") }, onClick = { menuAberto = false; onRemover() })
                     DropdownMenuItem(text = { Text("Excluir registro") }, onClick = { menuAberto = false; onExcluir() })
                 }

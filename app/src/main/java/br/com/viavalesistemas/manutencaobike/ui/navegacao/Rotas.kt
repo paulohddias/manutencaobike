@@ -14,10 +14,10 @@ data class RotaBikeDetalhe(val bikeId: Long)
 
 /** tipoPecaId = 0 deixa o usuário escolher o tipo. */
 @Serializable
-data class RotaPecaForm(val bikeId: Long, val tipoPecaId: Long = 0L)
+data class RotaPecaForm(val bikeId: Long, val tipoPecaId: Long = 0L, val pecaId: Long = 0L)
 
 @Serializable
-data class RotaServicoForm(val bikeId: Long)
+data class RotaServicoForm(val bikeId: Long, val servicoId: Long = 0L)
 
 @Serializable
 data object RotaCatalogo

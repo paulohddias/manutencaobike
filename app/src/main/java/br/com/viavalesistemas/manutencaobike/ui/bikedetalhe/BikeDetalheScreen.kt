@@ -81,6 +81,8 @@ fun BikeDetalheScreen(
     onEditarBike: (Long) -> Unit,
     onInstalarPeca: (bikeId: Long, tipoPecaId: Long) -> Unit,
     onRegistrarServico: (Long) -> Unit,
+    onEditarPeca: (bikeId: Long, pecaId: Long) -> Unit,
+    onEditarServico: (bikeId: Long, servicoId: Long) -> Unit,
     viewModel: BikeDetalheViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -100,6 +102,8 @@ fun BikeDetalheScreen(
         onEditarBike = { onEditarBike(viewModel.bikeId) },
         onInstalarPeca = { onInstalarPeca(viewModel.bikeId, 0L) },
         onRegistrarServico = { onRegistrarServico(viewModel.bikeId) },
+        onEditarPeca = { onEditarPeca(viewModel.bikeId, it) },
+        onEditarServico = { onEditarServico(viewModel.bikeId, it) },
     )
 }
 
@@ -112,6 +116,8 @@ private fun BikeDetalheContent(
     onEditarBike: () -> Unit,
     onInstalarPeca: () -> Unit,
     onRegistrarServico: () -> Unit,
+    onEditarPeca: (Long) -> Unit,
+    onEditarServico: (Long) -> Unit,
 ) {
     var abaSelecionada by rememberSaveable { mutableIntStateOf(0) }
     var confirmacao by remember { mutableStateOf<Confirmacao?>(null) }
@@ -187,9 +193,9 @@ private fun BikeDetalheContent(
                 }
             }
             when (aba) {
-                Aba.PECAS -> AbaPecas(uiState.pecasInstaladas, actions, onPedirConfirmacao = { confirmacao = it })
-                Aba.SERVICOS -> AbaServicos(uiState, actions, bike.kmAtual, onPedirConfirmacao = { confirmacao = it })
-                Aba.HISTORICO -> AbaHistorico(uiState)
+                Aba.PECAS -> AbaPecas(uiState.pecasInstaladas, actions, onEditarPeca, onPedirConfirmacao = { confirmacao = it })
+                Aba.SERVICOS -> AbaServicos(uiState, actions, bike.kmAtual, onEditarServico, onPedirConfirmacao = { confirmacao = it })
+                Aba.HISTORICO -> AbaHistorico(uiState, onEditarPeca)
             }
         }
     }

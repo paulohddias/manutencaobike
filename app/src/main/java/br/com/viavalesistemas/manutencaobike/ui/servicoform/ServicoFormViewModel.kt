@@ -9,6 +9,7 @@ import br.com.viavalesistemas.manutencaobike.data.repositorio.CatalogoRepository
 import br.com.viavalesistemas.manutencaobike.data.repositorio.ServicoRepository
 import br.com.viavalesistemas.manutencaobike.model.Servico
 import br.com.viavalesistemas.manutencaobike.model.TipoServico
+import br.com.viavalesistemas.manutencaobike.ui.centavosParaTexto
 import br.com.viavalesistemas.manutencaobike.ui.lerCentavos
 import br.com.viavalesistemas.manutencaobike.ui.lerInteiro
 import br.com.viavalesistemas.manutencaobike.ui.mensagemParaUsuario
@@ -33,7 +34,11 @@ data class ServicoFormUiState(
     val custo: String = "",
     val observacoes: String = "",
     val salvando: Boolean = false,
+    /** Serviço sendo editado; null = registro novo. */
+    val original: Servico? = null,
 ) {
+    val editando: Boolean get() = original != null
+
     val custoValido: Boolean get() = custo.isBlank() || lerCentavos(custo) != null
     val podeSalvar: Boolean get() = tipoSelecionado != null && lerInteiro(km) != null && custoValido && !salvando
 }
@@ -51,7 +56,8 @@ class ServicoFormViewModel @Inject constructor(
     private val servicoRepository: ServicoRepository,
 ) : ViewModel() {
 
-    private val bikeId = savedStateHandle.toRoute<RotaServicoForm>().bikeId
+    private val rota = savedStateHandle.toRoute<RotaServicoForm>()
+    private val bikeId = rota.bikeId
 
     private val _uiState = MutableStateFlow(ServicoFormUiState())
     val uiState = _uiState.asStateFlow()
@@ -64,6 +70,19 @@ class ServicoFormViewModel @Inject constructor(
             val tipos = catalogoRepository.observarTiposServico().first()
             val km = bikeRepository.observarBike(bikeId).first()?.kmAtual ?: 0.0
             _uiState.update { it.copy(tipos = tipos, km = km.roundToLong().toString()) }
+            val original = if (rota.servicoId != 0L) servicoRepository.buscar(rota.servicoId) else null
+            if (original != null) {
+                _uiState.update {
+                    it.copy(
+                        original = original,
+                        tipoSelecionado = tipos.find { tipo -> tipo.id == original.tipoServicoId },
+                        data = original.data,
+                        km = original.km.roundToLong().toString(),
+                        custo = centavosParaTexto(original.custoCentavos),
+                        observacoes = original.observacoes.orEmpty(),
+                    )
+                }
+            }
         }
     }
 
@@ -77,18 +96,23 @@ class ServicoFormViewModel @Inject constructor(
         val estado = _uiState.value
         val tipo = estado.tipoSelecionado ?: return
         if (!estado.podeSalvar) return
+        val original = estado.original
+        val km = lerInteiro(estado.km)!!
         val servico = Servico(
+            id = original?.id ?: 0,
             bikeId = bikeId,
             tipoServicoId = tipo.id,
             tipoNome = tipo.nome,
             data = estado.data,
-            km = lerInteiro(estado.km)!!.toDouble(),
+            // Sem mexer no km, mantém o valor exato (o campo mostra o arredondado).
+            km = original?.km?.takeIf { it.roundToLong() == km.toLong() } ?: km.toDouble(),
             custoCentavos = estado.custo.takeIf { it.isNotBlank() }?.let(::lerCentavos),
             observacoes = estado.observacoes.trim().ifBlank { null },
         )
         viewModelScope.launch {
             _uiState.update { it.copy(salvando = true) }
-            servicoRepository.registrar(servico)
+            val resultado = if (original != null) servicoRepository.atualizar(servico) else servicoRepository.registrar(servico).map { }
+            resultado
                 .onSuccess { _efeitos.send(ServicoFormEfeito.Voltar) }
                 .onFailure {
                     _uiState.update { s -> s.copy(salvando = false) }

@@ -25,7 +25,7 @@ import br.com.viavalesistemas.manutencaobike.ui.formatarMoeda
 import br.com.viavalesistemas.manutencaobike.ui.formatarPercentual
 
 @Composable
-fun AbaHistorico(uiState: BikeDetalheUiState) {
+fun AbaHistorico(uiState: BikeDetalheUiState, onEditarPeca: (pecaId: Long) -> Unit) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -46,7 +46,7 @@ fun AbaHistorico(uiState: BikeDetalheUiState) {
         if (uiState.pecasRemovidas.isEmpty()) {
             item { TextoVazio("Quando você trocar uma peça, verá aqui quantos km ela durou de verdade.") }
         }
-        items(uiState.pecasRemovidas, key = { it.peca.id }) { ItemPecaRemovida(it) }
+        items(uiState.pecasRemovidas, key = { it.peca.id }) { ItemPecaRemovida(it, onEditar = { onEditarPeca(it.peca.id) }) }
     }
 }
 
@@ -60,9 +60,9 @@ private fun LinhaCusto(rotulo: String, centavos: Long, destaque: Boolean = false
 }
 
 @Composable
-private fun ItemPecaRemovida(desgaste: DesgastePeca) {
+private fun ItemPecaRemovida(desgaste: DesgastePeca, onEditar: () -> Unit) {
     val peca = desgaste.peca
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    ElevatedCard(onClick = onEditar, modifier = Modifier.fillMaxWidth()) {
         ListItem(
             headlineContent = { Text(peca.tipoNome + (peca.descricao?.let { " · $it" } ?: "")) },
             supportingContent = {

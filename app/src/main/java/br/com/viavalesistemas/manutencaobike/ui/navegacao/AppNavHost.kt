@@ -45,6 +45,8 @@ fun AppNavHost(mensagensGlobais: Flow<String>) {
                     onEditarBike = { navController.navigate(RotaBikeForm(it)) },
                     onInstalarPeca = { bikeId, tipoPecaId -> navController.navigate(RotaPecaForm(bikeId, tipoPecaId)) },
                     onRegistrarServico = { navController.navigate(RotaServicoForm(it)) },
+                    onEditarPeca = { bikeId, pecaId -> navController.navigate(RotaPecaForm(bikeId, pecaId = pecaId)) },
+                    onEditarServico = { bikeId, servicoId -> navController.navigate(RotaServicoForm(bikeId, servicoId)) },
                 )
             }
             composable<RotaPecaForm> { PecaFormScreen(onVoltar = voltar) }
